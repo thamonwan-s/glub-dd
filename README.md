@@ -1,10 +1,10 @@
-# Glub-DD / กลับดี ๆ 
+# Glub-DD / กลับดี ๆ ( Be Safe )
 
 A multimodal late-night transit planner in Bangkok that compares routes by cost, travel time, and transportation options.
 
 ## About
 
-glub-dd is a personal project created to solve a practical problem: finding affordable and efficient ways to travel after midnight when most public transportation services are limited.
+Glub-DD is a personal project created to solve a practical problem: finding affordable and efficient ways to travel after midnight when most public transportation services are limited.
 
 The project aims to explore routes that combine different modes of transportation, such as:
 
