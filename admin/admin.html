@@ -26,7 +26,8 @@
     <table id="locationTable">
         <thead>
             <tr>
-                <th>ชื่อสถานที่</th>
+                <th>ชื่อภาษาไทย (TH)</th>
+                <th>ชื่อภาษาอังกฤษ (EN)</th>
                 <th>Lat</th>
                 <th>Lng</th>
                 <th>จัดการ</th>
@@ -45,7 +46,8 @@
             if(data) {
                 data.forEach(item => {
                     tbody.innerHTML += `<tr>
-                        <td>${item.name}</td>
+                        <td>${item.name_th || item.name || '-'}</td>
+                        <td>${item.name_en || '-'}</td>
                         <td>${item.lat}</td>
                         <td>${item.lng}</td>
                         <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
@@ -65,41 +67,34 @@
             statusText.innerText = "สถานะ: กำลังดึงข้อมูลจากลิงก์...";
 
             try {
-                // 1. เรียก Edge Function ให้ไปแกะข้อมูลจากลิงก์
+                // 1. เรียก Edge Function
                 const { data, error } = await supabase.functions.invoke('get-location', { body: { shortLink: link } });
                 if (error) throw error;
-                
-                // สมมติว่า Edge Function ส่งค่ากลับมาทั้ง fullUrl และ name (ชื่อสถานที่)
-                // ถ้า Edge Function เก่าส่งมาแค่ fullUrl เราอาจจะต้องดึงพิกัดก่อน
-                const match = data.fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                if (!match) throw new Error("ไม่พบพิกัดในลิงก์นี้");
 
-                const lat = parseFloat(match[1]);
-                const lng = parseFloat(match[2]);
-                
-                // ดึงชื่อสถานที่จาก Edge Function (ถ้ามี) หรือใช้ชื่อสำรองถ้าไม่มี
-                const placeName = data.name || "ป้ายรถเมล์ (พิกัด: " + lat + ", " + lng + ")";
+                const { lat, lng, name_th, name_en } = data;
 
-                statusText.innerText = "สถานะ: กำลังตรวจสอบข้อมูลซ้ำ...";
+                statusText.innerText = `สถานะ: พบข้อมูล (${name_th}) กำลังตรวจสอบข้อมูลซ้ำ...`;
 
-                // 2. เช็คซ้ำจากพิกัดหรือชื่อ
+                // 2. เช็คซ้ำจากพิกัดหรือชื่อไทย
                 const { data: existing } = await supabase.from('bus_stops')
-                    .select('id').or(`name.eq.${placeName},and(lat.eq.${lat},lng.eq.${lng})`);
+                    .select('id')
+                    .or(`name_th.eq."${name_th}",and(lat.eq.${lat},lng.eq.${lng})`);
 
                 if (existing && existing.length > 0) {
                     alert("⚠️ สถานที่นี้มีอยู่แล้วในระบบ!");
                     statusText.innerText = "สถานะ: พบข้อมูลซ้ำ ไม่ได้บันทึก";
                 } else {
-                    // 3. บันทึกลงฐานข้อมูล
+                    // 3. บันทึกลง Supabase Database
                     const { error: insertErr } = await supabase.from('bus_stops').insert([{ 
-                        name: placeName, 
+                        name_th: name_th,
+                        name_en: name_en,
                         lat: lat, 
                         lng: lng 
                     }]);
 
                     if (insertErr) throw insertErr;
 
-                    alert("✅ บันทึกสำเร็จ!");
+                    alert(`✅ บันทึกสำเร็จ!\n- TH: ${name_th}\n- EN: ${name_en}\n- Lat/Lng: ${lat}, ${lng}`);
                     statusText.innerText = "สถานะ: บันทึกสำเร็จเรียบร้อย";
                     fetchLocations();
                     document.getElementById('mapLink').value = '';
