@@ -70,11 +70,11 @@
             stop.lng
           ]).addTo(map);
 
-          marker.bindPopup(
-            '<b>${stop.name}</b><br>
+          marker.bindPopup(`
+            <b>${stop.name}</b><br>
             Latitude: ${stop.lat}<br>
             Longitude: ${stop.lng}
-          ');
+          `);
         });
       }
       loadBusStops();
