@@ -1,6 +1,6 @@
-# Glub DD
+# Glub-DD / กลับดี ๆ 
 
-A multimodal late-night transit planner that compares routes by cost, travel time, and transportation options.
+A multimodal late-night transit planner in Bangkok that compares routes by cost, travel time, and transportation options.
 
 ## About
 
