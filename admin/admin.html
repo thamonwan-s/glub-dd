@@ -8,23 +8,21 @@
         body { font-family: sans-serif; padding: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .form-box { background: #f4f4f4; padding: 15px; border-radius: 8px; }
+        .form-box { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <h1>หน้าจัดการสถานที่ (Admin)</h1>
 
-    <!-- ส่วนฟอร์มเพิ่มข้อมูล -->
     <div class="form-box">
         <h3>เพิ่มสถานที่ใหม่ (ด้วย Google Maps Link)</h3>
         <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps" style="width: 300px;">
         <input type="text" id="placeName" placeholder="ชื่อ (ไทย / อังกฤษ)">
         <input type="text" id="placeType" placeholder="ประเภท">
-        <button onclick="saveData()">บันทึกข้อมูล</button>
+        <button id="saveBtn" onclick="saveData()">บันทึกข้อมูล</button>
     </div>
 
-    <!-- ส่วนตารางแสดงข้อมูล -->
     <table id="locationTable">
         <thead>
             <tr>
@@ -41,46 +39,73 @@
     <script>
         const supabase = supabase.createClient('https://pqjzrjrkoasirbniecly.supabase.co', 'sb_publishable_fI1FYuTjLp5SotlYIDtnUw_L5CTZAZd');
 
-        // ฟังก์ชันดึงข้อมูลมาแสดงในตาราง
         async function fetchLocations() {
-            const { data } = await supabase.from('your_table_name').select('*');
+            const { data } = await supabase.from('bus_stops').select('*');
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            data.forEach(item => {
-                tbody.innerHTML += `<tr>
-                    <td>${item.name}</td>
-                    <td>${item.lat}</td>
-                    <td>${item.lng}</td>
-                    <td>${item.type}</td>
-                    <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
-                </tr>`;
-            });
+            if(data) {
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr>
+                        <td>${item.name}</td>
+                        <td>${item.lat}</td>
+                        <td>${item.lng}</td>
+                        <td>${item.type}</td>
+                        <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
+                    </tr>`;
+                });
+            }
         }
 
-        // ฟังก์ชันบันทึกข้อมูล (เรียก Edge Function)
         async function saveData() {
             const link = document.getElementById('mapLink').value;
             const name = document.getElementById('placeName').value;
             const type = document.getElementById('placeType').value;
+            const btn = document.getElementById('saveBtn');
 
-            const { data } = await supabase.functions.invoke('get-location', { body: { shortLink: link } });
-            const match = data.fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-            
-            if (match) {
-                await supabase.from('your_table_name').insert([{ 
-                    name, lat: match[1], lng: match[2], type 
-                }]);
-                alert("บันทึกสำเร็จ!");
-                fetchLocations();
+            if (!link || !name) return alert("กรุณากรอกลิงก์และชื่อให้ครบ");
+
+            btn.disabled = true;
+            btn.innerText = "กำลังบันทึก...";
+
+            try {
+                const { data, error } = await supabase.functions.invoke('get-location', { body: { shortLink: link } });
+                if (error) throw error;
+                
+                const match = data.fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                if (!match) throw new Error("ไม่พบพิกัดในลิงก์");
+
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+
+                const { data: existing } = await supabase.from('bus_stops')
+                    .select('id').or(`name.eq.${name},and(lat.eq.${lat},lng.eq.${lng})`);
+
+                if (existing && existing.length > 0) {
+                    alert("⚠️ ข้อมูลนี้มีอยู่แล้วในระบบ!");
+                } else {
+                    await supabase.from('bus_stops').insert([{ name, lat, lng, type }]);
+                    alert("บันทึกสำเร็จ!");
+                    fetchLocations();
+                    document.getElementById('mapLink').value = '';
+                    document.getElementById('placeName').value = '';
+                    document.getElementById('placeType').value = '';
+                }
+            } catch (err) {
+                alert("เกิดข้อผิดพลาด: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึกข้อมูล";
             }
         }
 
         async function deleteRow(id) {
-            await supabase.from('your_table_name').delete().eq('id', id);
-            fetchLocations();
+            if(confirm('ยืนยันการลบ?')) {
+                await supabase.from('bus_stops').delete().eq('id', id);
+                fetchLocations();
+            }
         }
 
-        fetchLocations(); // โหลดข้อมูลตอนเปิดหน้าเว็บ
+        fetchLocations();
     </script>
 </body>
 </html>
