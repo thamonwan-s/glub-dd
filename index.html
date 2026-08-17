@@ -31,7 +31,18 @@
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
 
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdeliver.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+      //Supabase Connection
+      const SUPABASE_URL = 'https://supabase.com/dashboard/project/pqjzrjrkoasirbniecly';
+      const SUPABASE_KEY = 'sb_publishable_fI1FYuTjLp5SotlYIDtnUw_L5CTZAZd';
+
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
       // Create Map
       const map = L.map('map').setView([13.7563,100.5018],12);
 
@@ -43,12 +54,31 @@
         }
       ).addTo(map);
 
-      //Example marker
-      const marker = L.marker([13.7465, 100.5348])
-        .addTo(map);
-      marker.bindPopup(
-        '<b>Example Location</b><br>Latitude: 13.7465<br>Longitude: 100.5348'
-      );
+      //Load bus stops from Supabase
+      async function loadBusStops(){
+        const {data, error}=await supabase
+          .from('bus_stops')
+          .select('*');
+        if (error) {
+          console.error('Error loading bus stops:'. error);
+          return;
+        }
+
+        data.forEach(stop => {
+          const marker = L.marker([
+            stop.lat,
+            stop.lng
+          ]).addTo(map);
+
+          marker.bindPopup(
+            '<b>${stop.name}</b><br>
+            Latitude: ${stop.lat}<br>
+            Longitude: ${stop.lng}
+          ');
+        });
+      }
+      loadBusStops();
+      
     </script>
   </body>
 </html>
