@@ -65,10 +65,16 @@
         }
 
         data.forEach(stop => {
-          const marker = L.marker([
-            stop.lat,
-            stop.lng
-          ]).addTo(map);
+          const busIcon = L.icon({
+            iconUrl: 'icons/bus.png',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+            popupAnchor: [0, -18]
+          });
+          const marker = L.marker(
+            [stop.lat, stop.lng],
+            { icon: busIcon }
+          ).addTo(map);
 
           marker.bindPopup(`
             <b>${stop.name}</b><br>
