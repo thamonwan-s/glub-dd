@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - จัดการสถานที่</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .form-box { background: #f4f4f4; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <h1>หน้าจัดการสถานที่ (Admin)</h1>
+
+    <!-- ส่วนฟอร์มเพิ่มข้อมูล -->
+    <div class="form-box">
+        <h3>เพิ่มสถานที่ใหม่ (ด้วย Google Maps Link)</h3>
+        <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps" style="width: 300px;">
+        <input type="text" id="placeName" placeholder="ชื่อ (ไทย / อังกฤษ)">
+        <input type="text" id="placeType" placeholder="ประเภท">
+        <button onclick="saveData()">บันทึกข้อมูล</button>
+    </div>
+
+    <!-- ส่วนตารางแสดงข้อมูล -->
+    <table id="locationTable">
+        <thead>
+            <tr>
+                <th>ชื่อ</th>
+                <th>Lat</th>
+                <th>Lng</th>
+                <th>ประเภท</th>
+                <th>จัดการ</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+        // ฟังก์ชันดึงข้อมูลมาแสดงในตาราง
+        async function fetchLocations() {
+            const { data } = await supabase.from('your_table_name').select('*');
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                tbody.innerHTML += `<tr>
+                    <td>${item.name}</td>
+                    <td>${item.lat}</td>
+                    <td>${item.lng}</td>
+                    <td>${item.type}</td>
+                    <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
+                </tr>`;
+            });
+        }
+
+        // ฟังก์ชันบันทึกข้อมูล (เรียก Edge Function)
+        async function saveData() {
+            const link = document.getElementById('mapLink').value;
+            const name = document.getElementById('placeName').value;
+            const type = document.getElementById('placeType').value;
+
+            const { data } = await supabase.functions.invoke('get-location', { body: { shortLink: link } });
+            const match = data.fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+            
+            if (match) {
+                await supabase.from('your_table_name').insert([{ 
+                    name, lat: match[1], lng: match[2], type 
+                }]);
+                alert("บันทึกสำเร็จ!");
+                fetchLocations();
+            }
+        }
+
+        async function deleteRow(id) {
+            await supabase.from('your_table_name').delete().eq('id', id);
+            fetchLocations();
+        }
+
+        fetchLocations(); // โหลดข้อมูลตอนเปิดหน้าเว็บ
+    </script>
+</body>
+</html>
