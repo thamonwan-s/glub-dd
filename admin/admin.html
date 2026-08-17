@@ -9,6 +9,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .form-box { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .preview-box { margin-top: 10px; font-size: 14px; color: #555; }
     </style>
 </head>
 <body>
@@ -16,20 +17,18 @@
     <h1>หน้าจัดการสถานที่ (Admin)</h1>
 
     <div class="form-box">
-        <h3>เพิ่มสถานที่ใหม่ (ด้วย Google Maps Link)</h3>
-        <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps" style="width: 300px;">
-        <input type="text" id="placeName" placeholder="ชื่อ (ไทย / อังกฤษ)">
-        <input type="text" id="placeType" placeholder="ประเภท">
-        <button id="saveBtn" onclick="saveData()">บันทึกข้อมูล</button>
+        <h3>เพิ่มป้ายรถเมล์อัตโนมัติ (ด้วย Google Maps Link)</h3>
+        <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps ที่นี่" style="width: 400px; padding: 5px;">
+        <button id="saveBtn" onclick="saveData()">ดึงข้อมูลและบันทึก</button>
+        <div class="preview-box" id="statusText">สถานะ: พร้อมใช้งาน</div>
     </div>
 
     <table id="locationTable">
         <thead>
             <tr>
-                <th>ชื่อ</th>
+                <th>ชื่อสถานที่</th>
                 <th>Lat</th>
                 <th>Lng</th>
-                <th>ประเภท</th>
                 <th>จัดการ</th>
             </tr>
         </thead>
@@ -49,7 +48,6 @@
                         <td>${item.name}</td>
                         <td>${item.lat}</td>
                         <td>${item.lng}</td>
-                        <td>${item.type}</td>
                         <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
                     </tr>`;
                 });
@@ -58,43 +56,59 @@
 
         async function saveData() {
             const link = document.getElementById('mapLink').value;
-            const name = document.getElementById('placeName').value;
-            const type = document.getElementById('placeType').value;
             const btn = document.getElementById('saveBtn');
+            const statusText = document.getElementById('statusText');
 
-            if (!link || !name) return alert("กรุณากรอกลิงก์และชื่อให้ครบ");
+            if (!link) return alert("กรุณาวางลิงก์ Google Maps");
 
             btn.disabled = true;
-            btn.innerText = "กำลังบันทึก...";
+            statusText.innerText = "สถานะ: กำลังดึงข้อมูลจากลิงก์...";
 
             try {
+                // 1. เรียก Edge Function ให้ไปแกะข้อมูลจากลิงก์
                 const { data, error } = await supabase.functions.invoke('get-location', { body: { shortLink: link } });
                 if (error) throw error;
                 
+                // สมมติว่า Edge Function ส่งค่ากลับมาทั้ง fullUrl และ name (ชื่อสถานที่)
+                // ถ้า Edge Function เก่าส่งมาแค่ fullUrl เราอาจจะต้องดึงพิกัดก่อน
                 const match = data.fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                if (!match) throw new Error("ไม่พบพิกัดในลิงก์");
+                if (!match) throw new Error("ไม่พบพิกัดในลิงก์นี้");
 
                 const lat = parseFloat(match[1]);
                 const lng = parseFloat(match[2]);
+                
+                // ดึงชื่อสถานที่จาก Edge Function (ถ้ามี) หรือใช้ชื่อสำรองถ้าไม่มี
+                const placeName = data.name || "ป้ายรถเมล์ (พิกัด: " + lat + ", " + lng + ")";
 
+                statusText.innerText = "สถานะ: กำลังตรวจสอบข้อมูลซ้ำ...";
+
+                // 2. เช็คซ้ำจากพิกัดหรือชื่อ
                 const { data: existing } = await supabase.from('bus_stops')
-                    .select('id').or(`name.eq.${name},and(lat.eq.${lat},lng.eq.${lng})`);
+                    .select('id').or(`name.eq.${placeName},and(lat.eq.${lat},lng.eq.${lng})`);
 
                 if (existing && existing.length > 0) {
-                    alert("⚠️ ข้อมูลนี้มีอยู่แล้วในระบบ!");
+                    alert("⚠️ สถานที่นี้มีอยู่แล้วในระบบ!");
+                    statusText.innerText = "สถานะ: พบข้อมูลซ้ำ ไม่ได้บันทึก";
                 } else {
-                    await supabase.from('bus_stops').insert([{ name, lat, lng, type }]);
-                    alert("บันทึกสำเร็จ!");
+                    // 3. บันทึกลงฐานข้อมูล
+                    const { error: insertErr } = await supabase.from('bus_stops').insert([{ 
+                        name: placeName, 
+                        lat: lat, 
+                        lng: lng 
+                    }]);
+
+                    if (insertErr) throw insertErr;
+
+                    alert("✅ บันทึกสำเร็จ!");
+                    statusText.innerText = "สถานะ: บันทึกสำเร็จเรียบร้อย";
                     fetchLocations();
                     document.getElementById('mapLink').value = '';
-                    document.getElementById('placeName').value = '';
-                    document.getElementById('placeType').value = '';
                 }
             } catch (err) {
                 alert("เกิดข้อผิดพลาด: " + err.message);
+                statusText.innerText = "สถานะ: เกิดข้อผิดพลาด";
             } finally {
                 btn.disabled = false;
-                btn.innerText = "บันทึกข้อมูล";
             }
         }
 
