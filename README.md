@@ -9,6 +9,7 @@ Glub-DD is a personal project created to solve a practical problem: finding affo
 The project aims to explore routes that combine different modes of transportation, such as:
 
 - 🚌 Bus
+- 🚐 Van
 - 🚆 Train
 - 🚇 MRT / BTS
 - 🏍️ Motorcycle taxi
