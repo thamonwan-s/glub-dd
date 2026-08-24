@@ -7,9 +7,10 @@
     <style>
         body { font-family: sans-serif; padding: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-break: break-all; }
         .form-box { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .preview-box { margin-top: 10px; font-size: 14px; color: #555; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -17,19 +18,20 @@
     <h1>หน้าจัดการสถานที่ (Admin)</h1>
 
     <div class="form-box">
-        <h3>เพิ่มป้ายรถเมล์อัตโนมัติ (ด้วย Google Maps Link)</h3>
-        <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps ที่นี่" style="width: 400px; padding: 5px;">
+        <h3>เพิ่มป้ายรถเมล์ (ด้วย Google Maps Link)</h3>
+        <input type="text" id="mapLink" placeholder="วางลิงก์ Google Maps ที่นี่" style="width: 400px; padding: 6px;">
         <button id="saveBtn" onclick="saveData()">ดึงข้อมูลและบันทึก</button>
-        <div class="preview-box" id="statusText">สถานะ: พร้อมใช้งาน</div>
+        <div id="statusText" style="margin-top: 8px; color: #666;">สถานะ: พร้อมใช้งาน</div>
     </div>
 
-    <table id="locationTable">
+    <table>
         <thead>
             <tr>
                 <th>ชื่อภาษาไทย (TH)</th>
                 <th>ชื่อภาษาอังกฤษ (EN)</th>
                 <th>Lat</th>
                 <th>Lng</th>
+                <th>ลิงก์แผนที่ (Map Link)</th>
                 <th>จัดการ</th>
             </tr>
         </thead>
@@ -42,6 +44,7 @@
             'sb_publishable_fI1FYuTjLp5SotlYIDtnUw_L5CTZAZd'
         );
 
+        // ดึงข้อมูลพร้อมคอลัมน์ map_link มาโชว์ในตาราง
         async function fetchLocations() {
             const { data, error } = await supabaseClient.from('bus_stops').select('*').order('id', { ascending: false });
             const tbody = document.getElementById('tableBody');
@@ -54,11 +57,16 @@
 
             if (data) {
                 data.forEach(item => {
+                    const linkHtml = item.map_link 
+                        ? `<a href="${item.map_link}" target="_blank">เปิดลิงก์</a>` 
+                        : '-';
+
                     tbody.innerHTML += `<tr>
-                        <td>${item.name_th || item.name || '-'}</td>
+                        <td>${item.name_th || '-'}</td>
                         <td>${item.name_en || '-'}</td>
                         <td>${item.lat}</td>
                         <td>${item.lng}</td>
+                        <td>${linkHtml}</td>
                         <td><button onclick="deleteRow(${item.id})">ลบ</button></td>
                     </tr>`;
                 });
@@ -67,76 +75,66 @@
 
         async function saveData() {
             const linkInput = document.getElementById('mapLink');
-            const link = linkInput.value.trim();
+            const originalLink = linkInput.value.trim();
             const btn = document.getElementById('saveBtn');
             const statusText = document.getElementById('statusText');
 
-            if (!link) return alert("กรุณาวางลิงก์ Google Maps");
+            if (!originalLink) return alert("กรุณาวางลิงก์ Google Maps");
 
             btn.disabled = true;
-            statusText.innerText = "สถานะ: กำลังดึงข้อมูลชื่อภาษาไทย...";
+            statusText.innerText = "กำลังสกัดพิกัด...";
 
             try {
-                let clientNameTh = "";
-
-                // ดึงชื่อภาษาไทยผ่าน Proxy Client เพื่อให้อ้างอิงบริบทประเทศไทย
-                try {
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(link + '?hl=th')}`;
-                    const res = await fetch(proxyUrl);
-                    const json = await res.json();
-                    
-                    if (json.contents) {
-                        const matchTh = json.contents.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || 
-                                        json.contents.match(/<title>(.*?)<\/title>/i);
-                        if (matchTh && matchTh[1]) {
-                            const parsedName = matchTh[1].split('·')[0].split(' - Google Maps')[0].trim();
-                            if (!parsedName.toLowerCase().includes("google maps") && !/^-?\d+\.\d+/.test(parsedName)) {
-                                clientNameTh = parsedName;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.log("Client Scraping Bypass Error:", e);
-                }
-
-                statusText.innerText = "สถานะ: กำลังสกัดพิกัดและบันทึกลงฐานข้อมูล...";
-
-                // เรียก Edge Function โดยส่งชื่อ clientNameTh ที่แกะได้ไปด้วย
                 const { data, error } = await supabaseClient.functions.invoke('get-location', { 
-                    body: { shortLink: link, clientNameTh: clientNameTh } 
+                    body: { shortLink: originalLink } 
                 });
                 
-                if (error) throw new Error("Edge Function: " + error.message);
-                if (data.error) throw new Error(data.error);
+                if (error || data.error) throw new Error(error?.message || data.error);
 
-                const { lat, lng, name_th, name_en } = data;
+                const { lat, lng, name_en } = data;
+                let finalTh = "";
 
-                // บันทึกลงตาราง bus_stops
+                statusText.innerText = "กำลังสกัดชื่อภาษาไทย...";
+
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=th`);
+                    const geo = await res.json();
+                    if (geo && geo.display_name) {
+                        const parts = geo.display_name.split(',');
+                        finalTh = parts[0].trim();
+                    }
+                } catch (e) {}
+
+                if (!finalTh) finalTh = name_en || `ป้ายรถเมล์ (${lat}, ${lng})`;
+
+                statusText.innerText = "กำลังบันทึกลงฐานข้อมูล...";
+
+                // บันทึกลง Supabase โดยส่งคอลัมน์ map_link ตรงๆ
                 const { error: insertErr } = await supabaseClient.from('bus_stops').insert([{ 
-                    name_th: name_th,
+                    name_th: finalTh,
                     name_en: name_en,
                     lat: lat, 
-                    lng: lng 
+                    lng: lng,
+                    map_link: originalLink
                 }]);
 
-                if (insertErr) throw new Error("Database: " + insertErr.message);
+                if (insertErr) throw new Error(insertErr.message);
 
-                alert(`✅ บันทึกสำเร็จ!\n\nTH: ${name_th}\nEN: ${name_en}\nLat: ${lat}\nLng: ${lng}`);
-                statusText.innerText = "สถานะ: บันทึกสำเร็จเรียบร้อย";
+                alert(`✅ บันทึกสำเร็จ!\n\nTH: ${finalTh}\nEN: ${name_en}\nLink: ${originalLink}`);
                 linkInput.value = '';
                 fetchLocations();
 
             } catch (err) {
-                console.error(err);
+                console.error("Save Error:", err);
                 alert("เกิดข้อผิดพลาด: " + err.message);
-                statusText.innerText = "สถานะ: เกิดข้อผิดพลาด (" + err.message + ")";
             } finally {
                 btn.disabled = false;
+                statusText.innerText = "สถานะ: พร้อมใช้งาน";
             }
         }
 
         async function deleteRow(id) {
-            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+            if (confirm('ยืนยันการลบรายการนี้?')) {
                 await supabaseClient.from('bus_stops').delete().eq('id', id);
                 fetchLocations();
             }
