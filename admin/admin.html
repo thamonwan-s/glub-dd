@@ -37,7 +37,6 @@
     </table>
 
     <script>
-        // ประกาศสร้าง Client เพียงครั้งเดียวเท่านั้น
         const supabaseClient = supabase.createClient(
             'https://pqjzrjrkoasirbniecly.supabase.co', 
             'sb_publishable_fI1FYuTjLp5SotlYIDtnUw_L5CTZAZd'
@@ -75,19 +74,42 @@
             if (!link) return alert("กรุณาวางลิงก์ Google Maps");
 
             btn.disabled = true;
-            statusText.innerText = "สถานะ: กำลังแกะข้อมูลจากลิงก์...";
+            statusText.innerText = "สถานะ: กำลังดึงข้อมูลชื่อภาษาไทย...";
 
             try {
-                // เรียก Edge Function
+                let clientNameTh = "";
+
+                // ดึงชื่อภาษาไทยผ่าน Proxy Client เพื่อให้อ้างอิงบริบทประเทศไทย
+                try {
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(link + '?hl=th')}`;
+                    const res = await fetch(proxyUrl);
+                    const json = await res.json();
+                    
+                    if (json.contents) {
+                        const matchTh = json.contents.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || 
+                                        json.contents.match(/<title>(.*?)<\/title>/i);
+                        if (matchTh && matchTh[1]) {
+                            const parsedName = matchTh[1].split('·')[0].split(' - Google Maps')[0].trim();
+                            if (!parsedName.toLowerCase().includes("google maps") && !/^-?\d+\.\d+/.test(parsedName)) {
+                                clientNameTh = parsedName;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log("Client Scraping Bypass Error:", e);
+                }
+
+                statusText.innerText = "สถานะ: กำลังสกัดพิกัดและบันทึกลงฐานข้อมูล...";
+
+                // เรียก Edge Function โดยส่งชื่อ clientNameTh ที่แกะได้ไปด้วย
                 const { data, error } = await supabaseClient.functions.invoke('get-location', { 
-                    body: { shortLink: link } 
+                    body: { shortLink: link, clientNameTh: clientNameTh } 
                 });
                 
                 if (error) throw new Error("Edge Function: " + error.message);
                 if (data.error) throw new Error(data.error);
 
                 const { lat, lng, name_th, name_en } = data;
-                statusText.innerText = `สถานะ: ดึงข้อมูลสำเร็จ (${name_th}) กำลังเช็คข้อมูลซ้ำ...`;
 
                 // บันทึกลงตาราง bus_stops
                 const { error: insertErr } = await supabaseClient.from('bus_stops').insert([{ 
@@ -120,7 +142,6 @@
             }
         }
 
-        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
         fetchLocations();
     </script>
 </body>
