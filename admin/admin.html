@@ -37,19 +37,26 @@
     </table>
 
     <script>
-        const supabase = supabase.createClient(
+        // ประกาศสร้าง Client เพียงครั้งเดียวเท่านั้น
+        const supabaseClient = supabase.createClient(
             'https://pqjzrjrkoasirbniecly.supabase.co', 
             'sb_publishable_fI1FYuTjLp5SotlYIDtnUw_L5CTZAZd'
         );
 
         async function fetchLocations() {
-            const { data } = await supabase.from('bus_stops').select('*').order('id', { ascending: false });
+            const { data, error } = await supabaseClient.from('bus_stops').select('*').order('id', { ascending: false });
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+            
+            if (error) {
+                console.error("Fetch Error:", error);
+                return;
+            }
+
             if (data) {
                 data.forEach(item => {
                     tbody.innerHTML += `<tr>
-                        <td>${item.name_th || '-'}</td>
+                        <td>${item.name_th || item.name || '-'}</td>
                         <td>${item.name_en || '-'}</td>
                         <td>${item.lat}</td>
                         <td>${item.lng}</td>
@@ -71,42 +78,34 @@
             statusText.innerText = "สถานะ: กำลังแกะข้อมูลจากลิงก์...";
 
             try {
-                // 1. เรียกใช้งาน Edge Function
-                const { data, error } = await supabase.functions.invoke('get-location', { 
+                // เรียก Edge Function
+                const { data, error } = await supabaseClient.functions.invoke('get-location', { 
                     body: { shortLink: link } 
                 });
                 
-                if (error) throw new Error(error.message || "ไม่สามารถติดต่อ Edge Function ได้");
+                if (error) throw new Error("Edge Function: " + error.message);
                 if (data.error) throw new Error(data.error);
 
                 const { lat, lng, name_th, name_en } = data;
                 statusText.innerText = `สถานะ: ดึงข้อมูลสำเร็จ (${name_th}) กำลังเช็คข้อมูลซ้ำ...`;
 
-                // 2. ตรวจสอบข้อมูลซ้ำในตาราง bus_stops
-                const { data: existing } = await supabase.from('bus_stops')
-                    .select('id')
-                    .or(`name_th.eq."${name_th}",and(lat.eq.${lat},lng.eq.${lng})`);
+                // บันทึกลงตาราง bus_stops
+                const { error: insertErr } = await supabaseClient.from('bus_stops').insert([{ 
+                    name_th: name_th,
+                    name_en: name_en,
+                    lat: lat, 
+                    lng: lng 
+                }]);
 
-                if (existing && existing.length > 0) {
-                    alert("⚠️ สถานที่นี้มีอยู่แล้วในระบบ!");
-                    statusText.innerText = "สถานะ: พบข้อมูลซ้ำ ไม่ได้บันทึกเพิ่ม";
-                } else {
-                    // 3. บันทึกลง Supabase Database
-                    const { error: insertErr } = await supabase.from('bus_stops').insert([{ 
-                        name_th: name_th,
-                        name_en: name_en,
-                        lat: lat, 
-                        lng: lng 
-                    }]);
+                if (insertErr) throw new Error("Database: " + insertErr.message);
 
-                    if (insertErr) throw insertErr;
+                alert(`✅ บันทึกสำเร็จ!\n\nTH: ${name_th}\nEN: ${name_en}\nLat: ${lat}\nLng: ${lng}`);
+                statusText.innerText = "สถานะ: บันทึกสำเร็จเรียบร้อย";
+                linkInput.value = '';
+                fetchLocations();
 
-                    alert(`✅ บันทึกสำเร็จ!\n\nTH: ${name_th}\nEN: ${name_en}\nLat: ${lat}\nLng: ${lng}`);
-                    statusText.innerText = "สถานะ: บันทึกข้อมูลลงฐานข้อมูลเรียบร้อย";
-                    linkInput.value = '';
-                    fetchLocations();
-                }
             } catch (err) {
+                console.error(err);
                 alert("เกิดข้อผิดพลาด: " + err.message);
                 statusText.innerText = "สถานะ: เกิดข้อผิดพลาด (" + err.message + ")";
             } finally {
@@ -116,11 +115,12 @@
 
         async function deleteRow(id) {
             if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-                await supabase.from('bus_stops').delete().eq('id', id);
+                await supabaseClient.from('bus_stops').delete().eq('id', id);
                 fetchLocations();
             }
         }
 
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
         fetchLocations();
     </script>
 </body>
