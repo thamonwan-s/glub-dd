@@ -1,33 +1,36 @@
-async function getGoogleSheetData(sheetId, sheetName) {
-    // 1. สร้าง URL ยิงไปขอข้อมูล GViz API
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+async function getGoogleSheetData(sheetId, sheetName = '') {
+    // ถ้าไม่ได้ใส่ชื่อแท็บ ให้ดึงแท็บแรกสุดอัตโนมัติ
+    let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    if (sheetName) {
+        url += `&sheet=${encodeURIComponent(sheetName)}`;
+    }
 
     try {
-        const response = await fetch(url);
-        const text = await response.text();
-
-        // 2. ตัดข้อความส่วนเกินที่ Google หุ้มไว้ออก (google.visualization.Query.setResponse(...);)
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network response was not ok");
+        
+        const text = await res.text();
+        
+        // ตัดข้อความหุ้มของ Google GViz API
         const jsonString = text.substring(47, text.length - 2);
         const data = JSON.parse(jsonString);
 
-        // 3. ดึงรายชื่อคอลัมน์ (Header)
-        const cols = data.table.cols.map(col => col.label);
+        if (!data.table || !data.table.rows) return [];
 
-        // 4. แปลงแถวข้อมูล (Rows) ให้อยู่ในรูป Array of Objects [{ Col1: Value, Col2: Value }]
-        const formattedData = data.table.rows.map(row => {
-            const rowData = {};
-            row.c.forEach((cell, index) => {
-                const colName = cols[index] || `col_${index}`;
-                // ดึงค่าจริงจาก cell (ถ้าช่องนั้นว่างเปล่าให้ใส่ null)
-                rowData[colName] = cell ? cell.v : null;
+        // ดึงชื่อหัวตาราง
+        const cols = data.table.cols.map(c => c ? c.label : '');
+
+        // แปลงเป็น Array of Objects
+        return data.table.rows.map(row => {
+            const obj = {};
+            row.c.forEach((cell, i) => {
+                const key = cols[i] || `col_${i}`;
+                obj[key] = cell ? cell.v : null;
             });
-            return rowData;
+            return obj;
         });
-
-        return formattedData; // ได้ Array ของข้อมูลพร้อมใช้งาน
-
-    } catch (error) {
-        console.error("Error fetching Google Sheet:", error);
+    } catch (e) {
+        console.error("Fetch Google Sheet Error:", e);
         return [];
     }
 }
