@@ -814,7 +814,10 @@
 
             contentDiv.innerHTML = `
                 <div class="route-header">
-                    <div class="route-number">${data.busNo}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                        <div class="route-number" style="margin: 0;">${data.busNo}</div>
+                        <div>${logoHtml}</div>
+                    </div>
                     <div class="route-name">${data.routeName}</div>
                     ${formattedDate ? `
                         <div class="route-updated">
