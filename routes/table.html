@@ -561,7 +561,6 @@
         // ==========================================
         async function initApp() {
             globalBusData = await getGoogleSheetData(SPREADSHEET_ID);
-            hideLoading();
 
             if (globalBusData.length === 0) {
                 document.getElementById('loading-screen').innerText = 'ไม่พบข้อมูล หรือเปิดสิทธิ์ชีทไม่ถูกต้อง';
@@ -632,6 +631,7 @@
             });
 
             container.innerHTML = html;
+            hideLoading();
         }
 
         // ==========================================
