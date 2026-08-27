@@ -350,10 +350,10 @@
 
             data.forEach((item) => {
                 // 1. หัวข้อบน (Title): A + ช่องว่าง + B (ตัวหนาสีเข้ม)
-                const titleText = `${item.colA} ${item.colB}`.trim();
+                const titleText = `<strong style="font-weight: 600;">${item.colA}</strong> ${item.colB}`.trim();
 
                 // 2. รายละเอียดล่าง (Subtitle): C (ตัวหนา) + ช่องว่าง + D (ตัวบาง)
-                const subtitleHtml = `<strong style="font-weight: 600; color: var(--text-main);">${item.colC}</strong> ${item.colD}`.trim();
+                const subtitleHtml = `<strong style="font-weight: 600;">${item.colC}</strong> ${item.colD}`.trim();
 
                 html += `
                 <div class="list-item">
