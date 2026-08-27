@@ -763,6 +763,14 @@
                 return;
             }
 
+            // 🌟 ดึงข้อมูลประเภทผู้ให้บริการ และสร้าง HTML โลโก้ (จุดที่ขาดไป)
+            const operatorType = typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined'
+                ? getBusOperatorType(data.busNo, allSheetsData)
+                : 'n/a';
+            const logoHtml = typeof renderOperatorLogos === 'function' 
+                ? renderOperatorLogos(operatorType) 
+                : '';
+
             const contentDiv = document.getElementById('detailContent');
             const formattedDate = data.lastUpdated ? formatDateString(data.lastUpdated) : 'n/a';
             
