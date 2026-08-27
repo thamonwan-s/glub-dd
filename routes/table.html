@@ -231,6 +231,22 @@
             margin-bottom: 24px;
         }
 
+        .route-number {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .route-name {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
         .route-title {
             font-size: 1.4rem;
             font-weight: 600;
@@ -561,8 +577,9 @@
 
             contentDiv.innerHTML = `
                 <div class="route-header">
-                    <h2 class="route-title">${data.busNo} ${data.routeName}</h2>
-                    ${data.lastUpdated ? `
+                    <div class="route-number">${data.busNo}</div>
+                    <div class="route-name">${data.routeName}</div>
+                    ${formattedDate ? `
                         <div class="route-updated">
                             <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             อัปเดตล่าสุด: ${formatDateString(data.lastUpdated)}
