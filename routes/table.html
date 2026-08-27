@@ -409,9 +409,7 @@
                     const valG = getVal(6); // วันอัปเดตล่าสุด
 
                     if (valA === '') {
-                        emptyCellCount++;
-                        // หากว่างติดกัน 3 แถว ถือว่าจบข้อมูลทั้งหมด
-                        if (emptyCellCount >= 3) break; 
+                        if (valC === '') break; 
                     } else {
                         emptyCellCount = 0; // เจอข้อมูลใหม่ รีเซ็ตนับว่าง
                     }
@@ -464,6 +462,13 @@
                 document.getElementById('loading').style.display = 'block';
                 return;
             }
+
+            // ----------------------------------------------------
+            // เรียงลำดับข้อมูลตามตัวอักษร/ตัวเลขของ busNo 
+            // ----------------------------------------------------
+            globalBusData.sort((a, b) => {
+                return a.busNo.localeCompare(b.busNo, 'th', { numeric: true, sensitivity: 'base' });
+            });
 
             const container = document.getElementById('listContainer');
             let html = '';
