@@ -59,14 +59,20 @@
   bottom: 8px;
   left: 0;
   width: 200%;
-  height: 0;
-  border-bottom: 2.5px dashed var(--road-color);
-  animation: moveRoad 0.7s linear infinite;
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--road-color) 0px,
+    var(--road-color) 8px,
+    transparent 8px,
+    transparent 18px
+  );
+  animation: moveRoad 1.2s linear infinite;
 }
 
 @keyframes moveRoad {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-18px); }
 }
 
 /* ==========================================
