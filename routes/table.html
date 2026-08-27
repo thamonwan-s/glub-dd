@@ -508,6 +508,7 @@
 
                 // 1. ตรวจสอบประเภทผู้ให้บริการ
                 const operatorType = getBusOperatorType(item.busNo, allSheetsData);
+                console.log("-->", operatorType);
                 
                 // 2. สร้าง HTML โลโก้
                 const logoHtml = renderOperatorLogos(operatorType);
