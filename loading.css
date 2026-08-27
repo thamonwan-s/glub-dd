@@ -1,16 +1,47 @@
-/* ฉากหลัง Loading Screen */
+/* ==========================================
+   1. COLOR VARIABLES & THEME SETUP
+   ========================================== */
+:root, [data-theme="light"] {
+  --bg-loading: #ffffff;
+  --text-loading: #475569;
+  --road-color: #94a3b8;
+  --bus-body-color: #3b82f6;
+  --bus-stripe-color: #60a5fa;
+  --bus-window-color: #e0f2fe;
+}
+
+[data-theme="dark"] {
+  --bg-loading: #0f172a !important;
+  --text-loading: #cbd5e1 !important;
+  --road-color: #475569 !important;
+  --bus-body-color: #2563eb !important;
+  --bus-stripe-color: #3b82f6 !important;
+  --bus-window-color: #1e293b !important;
+}
+
+/* ==========================================
+   2. SCREEN & SCENE CONTAINERS
+   ========================================== */
 .loading-screen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #f8f9fa;
+  background-color: var(--bg-loading);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 99999;
+  transition: opacity 0.4s ease, background-color 0.3s ease;
+  opacity: 1;
+}
+
+/* ซ่อนหน้า Loading แบบนุ่มนวลเมื่อโหลดเสร็จ */
+.loading-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .scene {
@@ -20,23 +51,111 @@
   overflow: hidden;
 }
 
-/* 1. ถนนเส้นประ */
+/* ==========================================
+   3. ROAD ANIMATION (ถนนวิ่งถอยหลัง)
+   ========================================== */
 .road-background {
   position: absolute;
   bottom: 12px;
-  width: 100%;
+  left: 0;
+  width: 200%;
   height: 0;
-  border-bottom: 3px dashed #cbd5e1; /* เส้นประขนาดกำลังพอดี */
+  border-bottom: 3px dashed var(--road-color);
+  animation: moveRoad 0.8s linear infinite;
 }
 
-/* 2. ป้าย Bus Stop แบบ Minimal */
+@keyframes moveRoad {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ==========================================
+   4. BUS (วางนิ่งอยู่ตรงกลาง)
+   ========================================== */
+.bus-minimal {
+  position: absolute;
+  left: 50%;
+  bottom: 15px;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 32px;
+  z-index: 2;
+  /* เพิ่มแรงสั่นเล็กน้อยเหมือนรถกำลังวิ่ง */
+  animation: busVibrate 0.3s ease-in-out infinite alternate;
+}
+
+.bus-body {
+  position: relative;
+  width: 100%;
+  height: 26px;
+  background-color: var(--bus-body-color);
+  border-radius: 6px 8px 3px 3px;
+  overflow: hidden;
+}
+
+.bus-window {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 10px;
+  background-color: var(--bus-window-color);
+  border-radius: 2px 4px 2px 2px;
+}
+
+.bus-stripe {
+  position: absolute;
+  bottom: 4px;
+  width: 100%;
+  height: 3px;
+  background-color: var(--bus-stripe-color);
+}
+
+.bus-wheels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px;
+  margin-top: -2px;
+}
+
+.wheel {
+  width: 8px;
+  height: 8px;
+  background-color: #1e293b;
+  border-radius: 50%;
+  border: 1.5px dashed #94a3b8;
+}
+
+.wheel-spinning {
+  animation: spinWheel 0.3s linear infinite;
+}
+
+@keyframes spinWheel {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes busVibrate {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(-50%, -1px); }
+}
+
+/* ==========================================
+   5. BUS STOP (สไลด์จากขวาเข้าหาตัวรถ)
+   ========================================== */
 .bus-stop-minimal {
   position: absolute;
-  right: 30px;
+  right: -50px;
   bottom: 15px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* เมื่อโหลดเสร็จ ป้ายจะวิ่งเข้ามาเทียบข้างตัวรถ */
+.bus-stop-minimal.arrived {
+  transform: translateX(-165px);
 }
 
 .stop-sign {
@@ -54,7 +173,7 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .stop-pole {
@@ -64,78 +183,13 @@
   border-radius: 2px 2px 0 0;
 }
 
-/* 3. ตัวรถเมล์ Minimal */
-.bus-minimal {
-  position: absolute;
-  left: -60px;
-  bottom: 15px;
-  width: 52px;
-  height: 32px;
-  animation: driveBus 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.bus-body {
-  position: relative;
-  width: 100%;
-  height: 26px;
-  background-color: #3b82f6; /* สีรถมินิมอล */
-  border-radius: 6px 8px 3px 3px;
-  overflow: hidden;
-}
-
-/* กระจกรถมินิมอล */
-.bus-window {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 16px;
-  height: 10px;
-  background-color: #e0f2fe;
-  border-radius: 2px 4px 2px 2px;
-}
-
-/* แถบคาดข้างรถ */
-.bus-stripe {
-  position: absolute;
-  bottom: 4px;
-  width: 100%;
-  height: 3px;
-  background-color: #60a5fa;
-}
-
-/* ล้อรถ */
-.bus-wheels {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 6px;
-  margin-top: -2px;
-}
-
-.wheel {
-  width: 8px;
-  height: 8px;
-  background-color: #334155;
-  border-radius: 50%;
-}
-
-/* ข้อความแสดงสถานะ */
+/* ==========================================
+   6. TEXT STYLING
+   ========================================== */
 .loading-text {
   margin-top: 20px;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-loading);
   font-weight: 500;
-}
-
-/* แอนิเมชันวิ่งของรถ */
-@keyframes driveBus {
-  0% {
-    left: -60px;
-  }
-  70%, 85% {
-    left: 170px; /* วิ่งมาจอดที่ป้าย */
-  }
-  100% {
-    left: 300px; /* วิ่งเลยออกไป */
-  }
 }
