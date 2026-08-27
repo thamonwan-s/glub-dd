@@ -410,7 +410,6 @@
                 const rawRows = data.table.rows;
                 const busRoutes = [];
                 let currentRoute = null;
-                let emptyCellCount = 0;
 
                 for (let i = 0; i < rawRows.length; i++) {
                     const row = rawRows[i];
@@ -508,7 +507,7 @@
                         </div>
                     </div>
                     <div class="item-right">
-                        <button class="badge" onclick="showDetailView(${index})">More</button>
+                        <button class="badge" onclick="showDetailView(${safeBusNo})">More</button>
                         <span class="arrow">›</span>
                     </div>
                 </div>
@@ -554,7 +553,7 @@
             let stopsCardsHtml = '';
             if (data.noScheduleText) {
                 // กรณี D1 เป็นช่องว่าง: แสดงข้อความจาก C1 และไม่ต้องสร้างการ์ดป้าย
-                stopsContentHtml = `
+                stopsCardsHtml = `
                 <div class="stop-card" style="text-align: center; padding: 24px 16px;">
                     <svg class="icon-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px; opacity: 0.6;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                     <div style="font-size: 15px; font-weight: 500; opacity: 0.9;">${data.noScheduleText}</div>
