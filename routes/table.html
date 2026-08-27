@@ -576,23 +576,35 @@
         
         // ฟังก์ชันค้นหาประเภทผู้ให้บริการจากข้อมูลชีทที่เกี่ยวข้อง
         function getBusOperatorType(busNo, allSheetsData) {
-            if (!allSheetsData) return "n/a";
+            if (!allSheetsData || !busNo) return "n/a";
             const targetSheetName = getSheetNameByBusNo(busNo);
             if (!targetSheetName || !allSheetsData[targetSheetName]) return "n/a";
         
             const rows = allSheetsData[targetSheetName]; // แถวข้อมูลในชีทนั้นๆ
+            if (!Array.isArray(rows) || rows.length === 0) return "n/a";
             const cleanBusNo = String(busNo).trim();
         
             // ค้นหาแถวที่คอลัมน์ A มีชื่อสายทั้งคำอยู่ในเซลล์
             const matchedRow = rows.find(row => {
-                const cellA = String(row.busNo || row.A || row[0] || '').trim(); // คอลัมน์ A (index 0)
+                if (!row) return false;
+                // ถ้าเป็น Array ใช้ row[0] ถ้าเป็น Object ดึง Value ตัวแรกสุด (คอลัมน์ A)
+                const cellA = Array.isArray(row) 
+                    ? String(row[0] || '').trim() 
+                    : String(Object.values(row)[0] || '').trim();
                 return cellA.includes(cleanBusNo);
             });
         
             if (!matchedRow) return "n/a";
         
-            // คอลัมน์ N คือ index 13
-            const cellN = String(matchedRow.operator || matchedRow.N || matchedRow[13] || '').trim();
+            // ดึงคอลัมน์ N (คอลัมน์ลำดับที่ 14 / Index 13)
+            let cellN = '';
+            if (Array.isArray(matchedRow)) {
+                cellN = String(matchedRow[13] || '').trim();
+            } else {
+                const values = Object.values(matchedRow);
+                // ดึง Value ตำแหน่งที่ 14 (Index 13) ถ้าไม่มีให้รวมทุกคอลัมน์มาเช็กเพื่อความชัวร์
+                cellN = String(values[13] || values.join(' ')).trim();
+            }
             const hasTSB = cellN.includes("ไทยสมายล์บัส");
             const hasBMTA = cellN.includes("ขสมก");
         
