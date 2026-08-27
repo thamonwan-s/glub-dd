@@ -42,7 +42,7 @@ function initLoadingUI() {
             </div>
 
           </div>
-          <p class="loading-text" id="loading-text">LOADING . . .</p>
+          <p class="loading-text" id="loading-text">LOADING</p>
         </div>
     `;
     
