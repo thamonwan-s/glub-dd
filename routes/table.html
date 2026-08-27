@@ -617,10 +617,10 @@
 
                 // 🌟 ดึงข้อมูลประเภทผู้ให้บริการ และสร้าง HTML โลโก้
                 const operatorType = typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined'
-                    ? getBusOperatorType(data.busNo, allSheetsData)
+                    ? getBusOperatorType(item.busNo, allSheetsData)
                     : 'n/a';
                     
-                console.log("--> [DetailView] busNo:", data.busNo);
+                console.log("--> [DetailView] busNo:", item.busNo);
                 console.log("--> [DetailView] operatorType ที่ได้:", operatorType);
                 console.log("--> [DetailView] allSheetsData ปัจจุบัน:", allSheetsData);
             
