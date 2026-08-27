@@ -474,6 +474,20 @@
                 document.getElementById('loading').style.display = 'block';
                 return;
             }
+            // 2. ดึงข้อมูลจากชีทย่อยทั้งหมดมาเก็บไว้ใน allSheetsData เพื่อเอาไว้เช็กคอลัมน์ A และ N
+            const sheetNames = ["สาย 1-50", "สาย 51-98", "สาย 101-150", "สาย 152-210", "สาย 501-559"];
+            const allSheetsData = {};
+
+            // ดึงข้อมูลแต่ละชีทพร้อมกันแบบ Parallel เพื่อความเร็ว
+            await Promise.all(sheetNames.map(async (sName) => {
+                try {
+                    // ดึงข้อมูลแบบ Raw Rows (เพื่อเอาคอลัมน์ A และ N)
+                    allSheetsData[sName] = await getGoogleSheetData(SPREADSHEET_ID, sName);
+                } catch (e) {
+                    console.warn(`ไม่สามารถดึงข้อมูลจากชีท ${sName} ได้:`, e);
+                    allSheetsData[sName] = [];
+                }
+            }));
 
             // ----------------------------------------------------
             // เรียงลำดับข้อมูลตามตัวอักษร/ตัวเลขของ busNo
@@ -561,6 +575,7 @@
         
         // ฟังก์ชันค้นหาประเภทผู้ให้บริการจากข้อมูลชีทที่เกี่ยวข้อง
         function getBusOperatorType(busNo, allSheetsData) {
+            if (!allSheetsData) return "n/a";
             const targetSheetName = getSheetNameByBusNo(busNo);
             if (!targetSheetName || !allSheetsData[targetSheetName]) return "n/a";
         
@@ -569,14 +584,14 @@
         
             // ค้นหาแถวที่คอลัมน์ A มีชื่อสายทั้งคำอยู่ในเซลล์
             const matchedRow = rows.find(row => {
-                const cellA = String(row[0] || '').trim(); // คอลัมน์ A (index 0)
+                const cellA = String(row.busNo || row.A || row[0] || '').trim(); // คอลัมน์ A (index 0)
                 return cellA.includes(cleanBusNo);
             });
         
             if (!matchedRow) return "n/a";
         
             // คอลัมน์ N คือ index 13
-            const cellN = String(matchedRow[13] || '').trim();
+            const cellN = String(matchedRow.operator || matchedRow.N || matchedRow[13] || '').trim();
             const hasTSB = cellN.includes("ไทยสมายล์บัส");
             const hasBMTA = cellN.includes("ขสมก");
         
