@@ -541,12 +541,14 @@
             // หากไม่อยู่ในรูปแบบ Date(...) ให้คืนค่าเดิมกลับไป
             return rawDate;
         }
-        
+
+        // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
-            const data = globalBusData.find(item => item.busNo === index);
+            const data = globalBusData.find(item => String(item.busNo) === String(index));
             if (!data) return;
 
             const contentDiv = document.getElementById('detailContent');
+            const formattedDate = formatDateString(data.lastUpdated);
             
             // สร้างการ์ดแยกของแต่ละป้าย
             let stopsCardsHtml = '';
@@ -584,7 +586,7 @@
                     ${formattedDate ? `
                         <div class="route-updated">
                             <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            อัปเดตล่าสุด: ${formatDateString(data.lastUpdated)}
+                            อัปเดตล่าสุด: ${formattedDate}
                         </div>
                     ` : ''}
                 </div>
