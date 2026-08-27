@@ -67,7 +67,7 @@
     transparent 8px,
     transparent 18px
   );
-  animation: moveRoad 1.2s linear infinite;
+  animation: moveRoad 0.7s linear infinite;
 }
 
 @keyframes moveRoad {
