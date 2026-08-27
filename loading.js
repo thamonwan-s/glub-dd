@@ -1,5 +1,5 @@
-// 1. ฟังก์ชันดึงสีธีมปัจจุบันอย่างแม่นยำ (รองรับทั้ง system, dark, light)
-function getResolvedTheme() {
+// 1. ตรวจสอบและบังคับเปลี่ยนสีธีมทันทีที่สคริปต์เริ่มทำงาน
+function getTargetTheme() {
     const savedTheme = localStorage.getItem('user-theme') || 'system';
     if (savedTheme === 'system') {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -7,24 +7,21 @@ function getResolvedTheme() {
     return savedTheme;
 }
 
-// 2. ปรับธีมที่ <html> ทันทีเพื่อป้องกันหน้าจอขาวสว่างจ้า
-(function applyThemeImmediately() {
-    const theme = getResolvedTheme();
-    document.documentElement.setAttribute('data-theme', theme);
-})();
-
-// 3. ฟังก์ชันสร้างโครงสร้าง Loading UI
+// 2. ฟังก์ชันสร้าง HTML ของ Loading UI
 function initLoadingUI() {
-    // ปรับสีธีมอีกครั้งเพื่อความแน่ใจก่อน Render
-    document.documentElement.setAttribute('data-theme', getResolvedTheme());
+    const currentTheme = getTargetTheme();
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    // กำหนดสีพื้นหลังตรง (Inline Style) ป้องกันปัญหาธีมสว่างจ้าค้าง
+    const bgColor = currentTheme === 'dark' ? '#0f172a' : '#ffffff';
 
     const loadingHTML = `
-        <div id="loading-screen" class="loading-screen">
+        <div id="loading-screen" class="loading-screen" style="background-color: ${bgColor} !important;">
           <div class="scene">
-            <!-- ถนนที่ขยับเลื่อนถอยหลังตลอดเวลา -->
+            <!-- ถนนขนาดสั้นลง -->
             <div class="road-background"></div>
             
-            <!-- ป้าย Bus Stop (จะวิ่งเข้ามาเมื่อสั่งปิด) -->
+            <!-- ป้าย Bus Stop ขนาดมินิมอล -->
             <div class="bus-stop-minimal" id="bus-stop-element">
               <div class="stop-sign">
                 <span>BUS</span>
@@ -33,7 +30,7 @@ function initLoadingUI() {
               <div class="stop-pole"></div>
             </div>
             
-            <!-- รถเมล์ จอดนิ่งอยู่ตรงกลางฉาก -->
+            <!-- รถเมล์ ขนาดเล็กลง -->
             <div class="bus-minimal">
               <div class="bus-body">
                 <div class="bus-window"></div>
@@ -46,7 +43,7 @@ function initLoadingUI() {
             </div>
 
           </div>
-          <p class="loading-text" id="loading-text">Loading...</p>
+          <p class="loading-text" id="loading-text">กำลังโหลดข้อมูลรถเมล์...</p>
         </div>
     `;
     
@@ -59,34 +56,31 @@ function initLoadingUI() {
     }
 }
 
-// 4. ฟังก์ชันซ่อนหน้า Loading เมื่อโหลดข้อมูลเสร็จ
+// 3. ฟังก์ชันซ่อนหน้า Loading เมื่อโหลดข้อมูลเสร็จ
 function hideLoading() {
     const stopSign = document.getElementById('bus-stop-element');
     const screen = document.getElementById('loading-screen');
 
     if (!screen) return;
 
-    // Step 1: สั่งให้ป้าย STOP เลื่อนเข้ามาหารถเมล์ตรงกลาง
+    // สั่งป้าย STOP วิ่งเข้ามาหาตัวรถ
     if (stopSign) {
         stopSign.classList.add('arrived');
     }
 
-    // Step 2: รอให้ป้ายเลื่อนถึงตรงกลาง (0.5 วินาที) แล้วค่อย Fade Out หน้า Loading
+    // เลื่อนป้ายเสร็จแล้วค่อย Fade Out
     setTimeout(() => {
         screen.classList.add('fade-out');
-        
-        // Step 3: ลบออกจากมุมมองโดยสมบูรณ์ ป้องกันการค้างบังหน้าเว็บ
         setTimeout(() => {
             screen.style.display = 'none';
         }, 400);
     }, 500);
 }
 
-// 5. ฟังก์ชันสำหรับเปลี่ยนข้อความ Loading
+// 4. เปลี่ยนข้อความ Loading
 function setLoadingText(text) {
     const textEl = document.getElementById('loading-text');
     if (textEl) textEl.innerText = text;
 }
 
-// เรียกสร้าง HTML
 initLoadingUI();
