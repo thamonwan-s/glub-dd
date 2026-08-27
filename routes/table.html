@@ -310,7 +310,7 @@
     <div class="container">
         <!-- Top Navigation -->
         <div class="header-bar">
-            <h1 class="header-title">ตารางเวลารถเมล์</h1>
+            <h1 class="header-title">รถบริการตลอดคืน</h1>
             <div class="segmented-control">
                 <button type="button" class="segment-btn" data-value="system" onclick="changeTheme('system')" title="System">
                     <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
@@ -498,6 +498,27 @@
         // ==========================================
         // 4. Render หน้ารายละเอียด (Detail View)
         // ==========================================
+        // ฟังก์ชันแปลง Date(YYYY,M,D) เป็น D MMM YYYY (เช่น 11 Jan 2025)
+        function formatDateString(rawDate) {
+            if (!rawDate) return '';
+            
+            // ตรวจสอบว่าตรงกับรูปแบบ Date(YYYY,M,D) หรือไม่
+            const match = rawDate.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (match) {
+                const year = match[1];
+                const monthIndex = parseInt(match[2], 10); // 0 = Jan, 1 = Feb, ...
+                const day = match[3];
+        
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const monthName = months[monthIndex] || '';
+        
+                return `${day} ${monthName} ${year}`;
+            }
+        
+            // หากไม่อยู่ในรูปแบบ Date(...) ให้คืนค่าเดิมกลับไป
+            return rawDate;
+        }
+        
         function showDetailView(index) {
             const data = globalBusData[index];
             if (!data) return;
@@ -539,7 +560,7 @@
                     ${data.lastUpdated ? `
                         <div class="route-updated">
                             <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            อัปเดตล่าสุด: ${data.lastUpdated}
+                            อัปเดตล่าสุด: ${formatDateString(data.lastUpdated)}
                         </div>
                     ` : ''}
                 </div>
