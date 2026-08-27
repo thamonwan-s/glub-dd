@@ -497,9 +497,10 @@
                 // ดึงข้อมูลป้ายแรกมาโชว์ตัวอย่างในหน้าหลัก
                 const firstStop = item.stops[0] || { stopName: 'ไม่ระบุป้าย', weekdayTime: '-' };
                 const subtitleHtml = `${item.routeName}`;
+                const safeBusNo = String(item.busNo).replace(/'/g, "\\'");
 
                 html += `
-                <div class="list-item" onclick="showDetailView('${item.busNo.replace(/'/g, "\\'")}')">
+                <div class="list-item" onclick="showDetailView('${safeBusNo}')">
                     <div class="item-left">
                         <div class="status-dot gray"></div>
                         <div>
