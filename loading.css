@@ -20,7 +20,7 @@
 }
 
 /* ==========================================
-   2. CONTAINERS & SCENE (ปรับให้สั้นลง)
+   2. CONTAINERS & SCENE
    ========================================== */
 .loading-screen {
   position: fixed;
@@ -43,7 +43,6 @@
   pointer-events: none;
 }
 
-/* ปรับความกว้างฉากถนนให้สั้นลงเหลือ 160px */
 .scene {
   position: relative;
   width: 160px;
@@ -52,7 +51,7 @@
 }
 
 /* ==========================================
-   3. SHORT ROAD (ถนนเส้นประแบบสั้น)
+   3. ROAD ANIMATION (ขยับไปเรื่อยๆ)
    ========================================== */
 .road-background {
   position: absolute;
@@ -70,15 +69,15 @@
 }
 
 /* ==========================================
-   4. SMALLER BUS (ตัวรถเล็กลง)
+   4. BUS (วางนิ่งอยู่ตรงกลาง)
    ========================================== */
 .bus-minimal {
   position: absolute;
   left: 50%;
   bottom: 10px;
   transform: translateX(-50%);
-  width: 38px; /* ปรับลดขนาดความกว้างรถ */
-  height: 24px; /* ปรับลดความสูง */
+  width: 38px;
+  height: 24px;
   z-index: 2;
   animation: busVibrate 0.3s ease-in-out infinite alternate;
 }
@@ -139,7 +138,7 @@
 }
 
 /* ==========================================
-   5. MINIMAL BUS STOP (ป้าย STOP ขนาดกะทัดรัด)
+   5. BUS STOP (สไลด์เข้ามาเมื่อโหลดเสร็จ)
    ========================================== */
 .bus-stop-minimal {
   position: absolute;
@@ -149,10 +148,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* ระยะสไลด์เข้าหาตัวรถในฉากที่สั้นลง */
+/* สไลด์ป้ายเข้ามาหยุดจอดข้างรถ */
 .bus-stop-minimal.arrived {
   transform: translateX(-95px);
 }
@@ -183,12 +182,13 @@
 }
 
 /* ==========================================
-   6. TEXT
+   6. TEXT STYLING
    ========================================== */
 .loading-text {
   margin-top: 14px;
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-loading);
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 1.5px;
 }
