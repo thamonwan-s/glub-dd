@@ -615,13 +615,18 @@
                 const subtitleHtml = `${item.routeName}`;
                 const safeBusNo = encodeURIComponent(item.busNo);
 
-                // 1. ตรวจสอบประเภทผู้ให้บริการ
-                const operatorType = getBusOperatorType(item.busNo, allSheetsData);
-                console.log("-->", operatorType);
-                
-                // 2. สร้าง HTML โลโก้
-                const logoHtml = renderOperatorLogos(operatorType);
-
+                // 🌟 ดึงข้อมูลประเภทผู้ให้บริการ และสร้าง HTML โลโก้
+                const operatorType = typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined'
+                    ? getBusOperatorType(data.busNo, allSheetsData)
+                    : 'n/a';
+                    
+                console.log("--> [DetailView] busNo:", data.busNo);
+                console.log("--> [DetailView] operatorType ที่ได้:", operatorType);
+                console.log("--> [DetailView] allSheetsData ปัจจุบัน:", allSheetsData);
+            
+                const logoHtml = typeof renderOperatorLogos === 'function' 
+                    ? renderOperatorLogos(operatorType) 
+                    : '';
                 html += `
                 <div class="list-item" onclick="showDetailView('${safeBusNo}')">
                     <div class="item-left">
