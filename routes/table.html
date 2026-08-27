@@ -16,13 +16,15 @@
             --text-main: #0f172a;
             --text-sub: #64748b;
             --border-color: #e2e8f0;
-            --hover-bg: rgba(0, 0, 0, 0.03);
+            --hover-bg: rgba(0, 0, 0, 0.02);
             --card-bg: #ffffff;
             --badge-bg: rgba(0, 0, 0, 0.04);
             --badge-text: #475569;
             --arrow-color: #94a3b8;
             --btn-active-bg: #e2e8f0;
             --accent-color: #3b82f6;
+            --icon-color: #64748b;
+            --schedule-bg: #f1f5f9;
         }
 
         [data-theme="dark"] {
@@ -37,6 +39,8 @@
             --arrow-color: #475569;
             --btn-active-bg: rgba(255, 255, 255, 0.15);
             --accent-color: #60a5fa;
+            --icon-color: #94a3b8;
+            --schedule-bg: rgba(255, 255, 255, 0.03);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -52,6 +56,8 @@
                 --arrow-color: #475569;
                 --btn-active-bg: rgba(255, 255, 255, 0.15);
                 --accent-color: #60a5fa;
+                --icon-color: #94a3b8;
+                --schedule-bg: rgba(255, 255, 255, 0.03);
             }
         }
 
@@ -88,7 +94,6 @@
             margin: 0;
         }
 
-        /* Theme Control Button */
         .segmented-control {
             display: inline-flex;
             background-color: var(--card-bg);
@@ -122,7 +127,6 @@
             padding: 30px;
         }
 
-        /* Views Switching */
         .view-section {
             display: none;
         }
@@ -220,87 +224,84 @@
         }
 
         .btn-back:hover {
-            text-decoration: underline;
+            opacity: 0.8;
         }
 
-        .detail-card {
+        .route-header {
+            margin-bottom: 24px;
+        }
+
+        .route-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0 0 6px 0;
+        }
+
+        .route-updated {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* การ์ดแยกของแต่ละป้าย */
+        .stop-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
         }
 
-        .detail-header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .detail-title {
-            font-size: 1.3rem;
+        .stop-name-title {
+            font-size: 1.05rem;
             font-weight: 600;
             color: var(--text-main);
-            margin: 0 0 4px 0;
-        }
-
-        .detail-updated {
-            font-size: 0.8rem;
-            color: var(--text-sub);
-        }
-
-        .stop-block {
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px dashed var(--border-color);
-        }
-
-        .stop-block:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .stop-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .stop-name::before {
-            content: '📍';
-            font-size: 0.85rem;
-        }
-
-        .schedule-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            font-size: 0.88rem;
-            background: var(--hover-bg);
-            padding: 12px;
+        .schedule-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: var(--schedule-bg);
+            padding: 14px;
             border-radius: 8px;
         }
 
-        .schedule-item {
+        .schedule-row {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 4px;
         }
 
         .schedule-label {
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 500;
             color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .schedule-time {
+        .schedule-val {
+            font-size: 0.9rem;
             color: var(--text-main);
+            font-weight: 400;
+            line-height: 1.5;
             word-break: break-word;
+        }
+
+        /* SVG Minimal Icon Style */
+        .icon-svg {
+            stroke: var(--icon-color);
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -312,13 +313,13 @@
             <h1 class="header-title">ตารางเวลารถเมล์</h1>
             <div class="segmented-control">
                 <button type="button" class="segment-btn" data-value="system" onclick="changeTheme('system')" title="System">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                 </button>
                 <button type="button" class="segment-btn" data-value="light" onclick="changeTheme('light')" title="Light">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 </button>
                 <button type="button" class="segment-btn" data-value="dark" onclick="changeTheme('dark')" title="Dark">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
             </div>
         </div>
@@ -332,7 +333,10 @@
 
         <!-- หน้าที่ 2: หน้ารายละเอียด (Detail View) -->
         <div id="detailView" class="view-section">
-            <button class="btn-back" onclick="showListView()">← ย้อนกลับหน้าหลัก</button>
+            <button class="btn-back" onclick="showListView()">
+                <svg class="icon-svg" style="stroke: var(--accent-color);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                ย้อนกลับหน้าหลัก
+            </button>
             <div id="detailContent"></div>
         </div>
     </div>
@@ -364,7 +368,6 @@
 
         initTheme();
 
-        // Data Storage
         let globalBusData = [];
 
         // ==========================================
@@ -466,11 +469,11 @@
             let html = '';
 
             globalBusData.forEach((item, index) => {
-                const titleText = `${item.busNo} ${item.routeName}`.trim();
+                const titleText = `${item.busNo}`.trim();
                 
                 // ดึงข้อมูลป้ายแรกมาโชว์ตัวอย่างในหน้าหลัก
                 const firstStop = item.stops[0] || { stopName: 'ไม่ระบุป้าย', weekdayTime: '-' };
-                const subtitleHtml = `<strong style="font-weight: 600; color: var(--text-main);">${firstStop.stopName}</strong> ${firstStop.weekdayTime}`;
+                const subtitleHtml = `${item.routeName}`;
 
                 html += `
                 <div class="list-item">
@@ -493,7 +496,7 @@
         }
 
         // ==========================================
-        // 4. ระบบสลับหน้า Single Page (List ↔ Detail)
+        // 4. Render หน้ารายละเอียด (Detail View)
         // ==========================================
         function showDetailView(index) {
             const data = globalBusData[index];
@@ -501,19 +504,29 @@
 
             const contentDiv = document.getElementById('detailContent');
             
-            let stopsHtml = '';
+            // สร้างการ์ดแยกของแต่ละป้าย
+            let stopsCardsHtml = '';
             data.stops.forEach((stop) => {
-                stopsHtml += `
-                <div class="stop-block">
-                    <div class="stop-name">${stop.stopName}</div>
-                    <div class="schedule-grid">
-                        <div class="schedule-item">
-                            <span class="schedule-label">🗓️ วันธรรมดา:</span>
-                            <span class="schedule-time">${stop.weekdayTime || '-'}</span>
+                stopsCardsHtml += `
+                <div class="stop-card">
+                    <div class="stop-name-title">
+                        <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        ${stop.stopName}
+                    </div>
+                    <div class="schedule-box">
+                        <div class="schedule-row">
+                            <span class="schedule-label">
+                                <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                วันธรรมดา
+                            </span>
+                            <div class="schedule-val">${stop.weekdayTime || '-'}</div>
                         </div>
-                        <div class="schedule-item" style="margin-top: 6px;">
-                            <span class="schedule-label">🏖️ เสาร์ - อาทิตย์ / นักขัตฤกษ์:</span>
-                            <span class="schedule-time">${stop.weekendTime || '-'}</span>
+                        <div class="schedule-row" style="margin-top: 6px;">
+                            <span class="schedule-label">
+                                <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                เสาร์ - อาทิตย์ / นักขัตฤกษ์
+                            </span>
+                            <div class="schedule-val">${stop.weekendTime || '-'}</div>
                         </div>
                     </div>
                 </div>
@@ -521,16 +534,19 @@
             });
 
             contentDiv.innerHTML = `
-                <div class="detail-card">
-                    <div class="detail-header">
-                        <h2 class="detail-title">${data.busNo} ${data.routeName}</h2>
-                        ${data.lastUpdated ? `<div class="detail-updated">อัปเดตล่าสุด: ${data.lastUpdated}</div>` : ''}
-                    </div>
-                    ${stopsHtml}
+                <div class="route-header">
+                    <h2 class="route-title">${data.busNo} ${data.routeName}</h2>
+                    ${data.lastUpdated ? `
+                        <div class="route-updated">
+                            <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            อัปเดตล่าสุด: ${data.lastUpdated}
+                        </div>
+                    ` : ''}
                 </div>
+                ${stopsCardsHtml}
             `;
 
-            // สลับหน้าจอ
+            // สลับ View ไปยังหน้ารายละเอียด
             document.getElementById('listView').classList.remove('active');
             document.getElementById('detailView').classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
