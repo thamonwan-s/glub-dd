@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
     <title>ระบบเช็กตารางเวลารถเมล์</title>
+    <link rel="stylesheet" href="loading.css">
     <script src="config.js"></script>
+    <script src="loading.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -343,7 +345,15 @@
             </div>
         </div>
 
-        <div id="loading" class="loading">⏳ กำลังโหลดข้อมูล...</div>
+        <!-- HTML ของหน้า Loading (ใส่ติดไว้เป็น Default ของหน้าเว็บ) -->
+        <div id="loading-screen" class="loading-screen">
+          <div class="scene">
+            <div class="road-background"></div>
+            <div class="bus-stop" id="bus-stop">🏣</div>
+            <div class="bus">🚌</div>
+          </div>
+          <p class="loading-text" id="loading-text">กำลังโหลดข้อมูลรถเมล์...</p>
+        </div>
 
         <!-- หน้าที่ 1: หน้าหลัก (List View) -->
         <div id="listView" class="view-section active">
