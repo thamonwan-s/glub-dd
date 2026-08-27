@@ -5,39 +5,39 @@
 })();
 
 // 2. ฟังก์ชันซ่อนหน้า Loading
-function hideLoading() {
-    const screen = document.getElementById('loading-screen');
-    const text = document.getElementById('loading-text');
-
-    if (!screen) return;
-
-    if (text) text.innerText = 'ถึงป้ายแล้ว!';
-    screen.classList.add('loaded');
-
-    setTimeout(() => {
-        screen.classList.add('fade-out');
-        
-        // ถอนออกจาก DOM Layout หลังจบแอนิเมชัน Fade ป้องกันการค้าง 100%
-        setTimeout(() => {
-            screen.style.display = 'none';
-        }, 500);
-    }, 800);
-}
-
-// 1. ฟังก์ชันสร้าง HTML ของ Loading แปะลงใน <body> อัตโนมัติ
+// ฟังก์ชันสร้าง HTML ของ Loading แปะลงใน <body> อัตโนมัติ
 function initLoadingUI() {
     const loadingHTML = `
         <div id="loading-screen" class="loading-screen">
           <div class="scene">
             <div class="road-background"></div>
-            <div class="bus-stop" id="bus-stop">🏣</div>
-            <div class="bus">🚌</div>
+            
+            <!-- ป้ายรถเมล์แบบ Minimal Stop Sign -->
+            <div class="bus-stop-minimal">
+              <div class="stop-sign">
+                <span>BUS</span>
+                <span>STOP</span>
+              </div>
+              <div class="stop-pole"></div>
+            </div>
+            
+            <!-- ตัวรถเมล์แบบ Minimal -->
+            <div class="bus-minimal">
+              <div class="bus-body">
+                <div class="bus-window"></div>
+                <div class="bus-stripe"></div>
+              </div>
+              <div class="bus-wheels">
+                <div class="wheel"></div>
+                <div class="wheel"></div>
+              </div>
+            </div>
+
           </div>
           <p class="loading-text" id="loading-text">กำลังโหลดข้อมูลรถเมล์...</p>
         </div>
     `;
     
-    // ถ้าหน้าเว็บโหลด body แล้วให้ใส่ทันที ถ้ายังไม่โหลดให้รอ event
     if (document.body) {
         document.body.insertAdjacentHTML('afterbegin', loadingHTML);
     } else {
@@ -47,21 +47,14 @@ function initLoadingUI() {
     }
 }
 
-// 2. ฟังก์ชันสำหรับซ่อนหน้า Loading
 function hideLoading() {
     const screen = document.getElementById('loading-screen');
-    if (screen) {
-        screen.style.display = 'none';
-    }
+    if (screen) screen.style.display = 'none';
 }
 
-// 3. ฟังก์ชันสำหรับเปลี่ยนข้อความ Loading (เช่น กรณี Error หรือหาข้อมูลไม่เจอ)
 function setLoadingText(text) {
     const textEl = document.getElementById('loading-text');
-    if (textEl) {
-        textEl.innerText = text;
-    }
+    if (textEl) textEl.innerText = text;
 }
 
-// เรียกสร้าง HTML ทันทีที่อ่านไฟล์ JS นี้
 initLoadingUI();
