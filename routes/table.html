@@ -543,7 +543,7 @@
         }
         
         function showDetailView(index) {
-            const data = globalBusData.find(item => item.busNo === busNo);
+            const data = globalBusData.find(item => item.busNo === index);
             if (!data) return;
 
             const contentDiv = document.getElementById('detailContent');
