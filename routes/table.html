@@ -458,7 +458,7 @@
 
                 return busRoutes;
 
-             catch (e) {
+            } catch (e) {
                 console.error("Fetch Sheet Error:", e);
                 return [];
             }
@@ -604,6 +604,7 @@
             document.getElementById('detailView').classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        }
 
         function showListView() {
             document.getElementById('detailView').classList.remove('active');
