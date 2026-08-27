@@ -576,6 +576,7 @@
         
         // ฟังก์ชันค้นหาประเภทผู้ให้บริการจากข้อมูลชีทที่เกี่ยวข้อง
         function getBusOperatorType(busNo, allSheetsData) {
+            
             if (!allSheetsData || !busNo) return "n/a";
             const targetSheetName = getSheetNameByBusNo(busNo);
             if (!targetSheetName || !allSheetsData[targetSheetName]) return "n/a";
@@ -583,6 +584,9 @@
             const rows = allSheetsData[targetSheetName]; // แถวข้อมูลในชีทนั้นๆ
             if (!Array.isArray(rows) || rows.length === 0) return "n/a";
             const cleanBusNo = String(busNo).trim();
+
+            console.group(`🔍 [เช็กสาย: "${cleanBusNo}"]`);
+            console.log(`📌 1. ชีทเป้าหมายที่คำนวณได้:`, targetSheetName);
         
             // ค้นหาแถวที่คอลัมน์ A มีชื่อสายทั้งคำอยู่ในเซลล์
             const matchedRow = rows.find(row => {
