@@ -761,8 +761,11 @@
             }
 
             // 🌟 ดึงข้อมูลประเภทผู้ให้บริการ และสร้าง HTML โลโก้ (จุดที่ขาดไป)
+            const busSearchKey = typeof extractBusSearchKey === 'function' && typeof cleanBusNoKey === 'function'
+                ? extractBusSearchKey(cleanBusNoKey(data.busNo))
+                : data.busNo;
             const operatorType = typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined'
-                ? getBusOperatorType(data.busNo, allSheetsData)
+                ? getBusOperatorType(busSearchKey, allSheetsData)
                 : 'n/a';
             const logoHtml = typeof renderOperatorLogos === 'function' 
                 ? renderOperatorLogos(operatorType) 
