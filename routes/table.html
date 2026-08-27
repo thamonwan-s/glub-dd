@@ -345,16 +345,6 @@
             </div>
         </div>
 
-        <!-- HTML ของหน้า Loading (ใส่ติดไว้เป็น Default ของหน้าเว็บ) -->
-        <div id="loading-screen" class="loading-screen">
-          <div class="scene">
-            <div class="road-background"></div>
-            <div class="bus-stop" id="bus-stop">🏣</div>
-            <div class="bus">🚌</div>
-          </div>
-          <p class="loading-text" id="loading-text">กำลังโหลดข้อมูลรถเมล์...</p>
-        </div>
-
         <!-- หน้าที่ 1: หน้าหลัก (List View) -->
         <div id="listView" class="view-section active">
             <div id="listContainer" class="list-container"></div>
@@ -411,14 +401,10 @@
                 await initApp();
             } catch (error) {
                 console.error("เกิดข้อผิดพลาดขณะโหลดแอป:", error);
+                setLoadingText("เกิดข้อผิดพลาดในการโหลดข้อมูล");
             } finally {
-                // ปิดหน้า Loading ทุกกรณี
-                if (typeof hideLoading === 'function') {
-                    hideLoading();
-                } else {
-                    const screen = document.getElementById('loading-screen');
-                    if (screen) screen.style.display = 'none';
-                }
+                // ปิดหน้า Loading
+                hideLoading();
             }
         });
         
@@ -574,11 +560,11 @@
         // ==========================================
         async function initApp() {
             globalBusData = await getGoogleSheetData(SPREADSHEET_ID);
-            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'none';
 
             if (globalBusData.length === 0) {
-                document.getElementById('loading').innerText = 'ไม่พบข้อมูล หรือเปิดสิทธิ์ชีทไม่ถูกต้อง';
-                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading-screen').innerText = 'ไม่พบข้อมูล หรือเปิดสิทธิ์ชีทไม่ถูกต้อง';
+                document.getElementById('loading-screen').style.display = 'block';
                 return;
             }
             // 2. ดึงข้อมูลจากชีทย่อยทั้งหมดมาเก็บไว้ใน allSheetsData เพื่อเอาไว้เช็กคอลัมน์ A และ N
