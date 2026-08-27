@@ -546,7 +546,7 @@
             
             // สร้างการ์ดแยกของแต่ละป้าย
             let stopsCardsHtml = '';
-            if (data.noScheduleText) {
+            if (data.noScheduleText || !data.stops || data.stops.length === 0) {
                 // กรณี D1 เป็นช่องว่าง: แสดงข้อความจาก C1 และไม่ต้องสร้างการ์ดป้าย
                 stopsCardsHtml = `
                 <div class="stop-card" style="text-align: center; padding: 24px 16px;">
