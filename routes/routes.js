@@ -42,3 +42,28 @@ async function getGoogleSheetData(sheetId, sheetName = '') {
         return [];
     }
 }
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('user-theme') || 'system';
+    setTheme(savedTheme);
+}
+
+function changeTheme(theme) {
+    localStorage.setItem('user-theme', theme);
+    setTheme(theme);
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // อัปเดตการแสดงผลปุ่ม active ให้ตรงกับโหมดที่เลือก
+    document.querySelectorAll('.segment-btn').forEach(btn => {
+        if (btn.getAttribute('data-value') === theme) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+initTheme();
