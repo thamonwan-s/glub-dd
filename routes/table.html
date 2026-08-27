@@ -403,6 +403,25 @@
         // 2. ระบบดึงข้อมูล Google Sheet
         // ==========================================
         const SPREADSHEET_ID = '151hB3s9N7M63IK8guYJslvORuDQIp9W2eunkv_HUBN0'; // ใส่ ID ชีทของคุณที่นี่
+        // ==========================================
+        // 2. เริ่มต้นโหลดข้อมูล (Main Entry Point)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initApp();
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาดขณะโหลดแอป:", error);
+            } finally {
+                // ปิดหน้า Loading ทุกกรณี
+                if (typeof hideLoading === 'function') {
+                    hideLoading();
+                } else {
+                    const screen = document.getElementById('loading-screen');
+                    if (screen) screen.style.display = 'none';
+                }
+            }
+        });
+        
 
         // ฟังก์ชันช่วยตัดอีโมจิและช่องว่าง ออกจาก busNo เพื่อเอาไว้เปรียบเทียบ
         function cleanBusNoKey(busNo) {
