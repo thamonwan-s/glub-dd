@@ -557,7 +557,9 @@
             console.log("-->", data.noScheduleText);
             console.log("-->", !data.stops);
             console.log("-->", data.stops.length === 0);
-            if (data.noScheduleText || !data.stops || data.stops.length === 0) {
+
+            const hasNoStops = !data.stops || data.stops.length === 0;
+            if (data.noScheduleText || hasNoStops) {
                 // กรณี D1 เป็นช่องว่าง: แสดงข้อความจาก C1 และไม่ต้องสร้างการ์ดป้าย
                 stopsCardsHtml = `
                 <div class="stop-card" style="text-align: center; padding: 24px 16px;">
@@ -593,6 +595,7 @@
                 </div>
                 `;
             });
+            }
                 console.log("-->", stopsCardsHtml);
 
             contentDiv.innerHTML = `
@@ -613,7 +616,7 @@
             document.getElementById('listView').classList.remove('active');
             document.getElementById('detailView').classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            
         }
 
         function showListView() {
