@@ -539,11 +539,7 @@
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
             const busNo = decodeURIComponent(index);
-            const cleanTarget = String(busNo).replace(/\s+/g, '').toLowerCase();
-            const data = globalBusData.find(item => {
-                const cleanItem = String(item.busNo).replace(/\s+/g, '').toLowerCase();
-                return cleanItem === cleanTarget;
-            });
+            const data = globalBusData.find(item => String(item.busNo).trim() === String(busNo).trim());
             console.log("--> ค่า index ที่รับเข้ามา:", index);
             console.log("--> ค่า busNo หลังถอดรหัส:", busNo);
             console.log("--> รายการ busNo ทั้งหมดที่มีในระบบ:", globalBusData.map(b => b.busNo));
