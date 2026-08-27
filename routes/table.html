@@ -544,6 +544,10 @@
                 const cleanItem = String(item.busNo).replace(/\s+/g, '').toLowerCase();
                 return cleanItem === cleanTarget;
             });
+            console.log("--> ค่า index ที่รับเข้ามา:", index);
+            console.log("--> ค่า busNo หลังถอดรหัส:", busNo);
+            console.log("--> รายการ busNo ทั้งหมดที่มีในระบบ:", globalBusData.map(b => b.busNo));
+            console.log("--> ผลการหา data:", data);
             if (!data) {
                 console.error("หา busNo ไม่เจอ! ค่าที่ส่งมาคือ:", busNo, "ข้อมูลใน globalBusData มีดังนี้:", globalBusData);
                 return;
