@@ -1,53 +1,254 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="system">
 <head>
     <meta charset="UTF-8">
-    <title>แสดงข้อมูลจาก Google Sheet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="#">
+    <title>Dashboard List UI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #f0f0f0; }
+        /* ==========================================
+           1. กำหนดตัวแปรสี (CSS Variables)
+           ========================================== */
+        :root {
+            /* Default: Light Mode */
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+            --hover-bg: rgba(0, 0, 0, 0.03);
+            --card-bg: #ffffff;
+            --badge-bg: rgba(0, 0, 0, 0.04);
+            --badge-text: #475569;
+            --arrow-color: #94a3b8;
+        }
+
+        /* Dark Mode Color Palette */
+        [data-theme="dark"] {
+            --bg-body: #0b0f17;
+            --text-main: #ffffff;
+            --text-sub: #64748b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --hover-bg: rgba(255, 255, 255, 0.03);
+            --card-bg: #111827;
+            --badge-bg: rgba(255, 255, 255, 0.04);
+            --badge-text: #cbd5e1;
+            --arrow-color: #475569;
+        }
+
+        /* Auto ตาม System (ใช้ Media Query ดักจาก OS) */
+        @media (prefers-color-scheme: dark) {
+            [data-theme="system"] {
+                --bg-body: #0b0f17;
+                --text-main: #ffffff;
+                --text-sub: #64748b;
+                --border-color: rgba(255, 255, 255, 0.08);
+                --hover-bg: rgba(255, 255, 255, 0.03);
+                --card-bg: #111827;
+                --badge-bg: rgba(255, 255, 255, 0.04);
+                --badge-text: #cbd5e1;
+                --arrow-color: #475569;
+            }
+        }
+
+        /* ==========================================
+           2. Layout & Components Styles
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Kanit', sans-serif;
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-sub);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* ปุ่มเลือกโหมด ลอยอยูู่มุมขวาบน */
+        .theme-switcher-wrapper {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .theme-select {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 30px;
+            font-size: 0.95rem;
+        }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .list-item:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .item-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 7px;
+            flex-shrink: 0;
+            background-color: #64748b;
+        }
+        .status-dot.green { background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+        .status-dot.red { background-color: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+        .status-dot.gray { background-color: #64748b; }
+
+        .item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .item-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .item-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            color: var(--badge-text);
+            background: var(--badge-bg);
+        }
+
+        .badge.production {
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .arrow {
+            color: var(--arrow-color);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
 
-    <h2>ข้อมูลจาก Google Sheet</h2>
-    <div id="loading">กำลังโหลดข้อมูล...</div>
-    
-    <table id="dataTable" style="display:none;">
-        <thead id="tableHead"></thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <div class="container">
+        <!-- ปุ่ม Switcher อยู่มุมขวาบน -->
+        <div class="theme-switcher-wrapper">
+            <span>Theme:</span>
+            <select id="themeSelect" class="theme-select" onchange="changeTheme(this.value)">
+                <option value="system">💻 System</option>
+                <option value="light">☀️ Light</option>
+                <option value="dark">🌙 Dark</option>
+            </select>
+        </div>
+
+        <div id="loading" class="loading">Loading deployment items...</div>
+        <div id="listContainer" class="list-container"></div>
+    </div>
 
     <script>
+        // ==========================================
+        // 1. ระบบจัดการธีม (Theme Management)
+        // ==========================================
+        const themeSelect = document.getElementById('themeSelect');
+
+        function initTheme() {
+            // อ่านค่าธีมเดิมที่เคยเซฟไว้ (ถ้าไม่มีให้ใช้ system)
+            const savedTheme = localStorage.getItem('user-theme') || 'system';
+            setTheme(savedTheme);
+            themeSelect.value = savedTheme;
+        }
+
+        function changeTheme(theme) {
+            localStorage.setItem('user-theme', theme);
+            setTheme(theme);
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        // โหลดธีมตั้งต้นทันที
+        initTheme();
+
+        // ==========================================
+        // 2. ดึงข้อมูล Google Sheet & แสดงผล
+        // ==========================================
         const SPREADSHEET_ID = '151hB3s9N7M63IK8guYJslvORuDQIp9W2eunkv_HUBN0'; // ใส่ ID ชีทของคุณที่นี่
         const SHEET_NAME = 'รถบริการตลอดคืน 🌙'; // ใส่ชื่อแท็บภาษาไทยหรืออังกฤษตรงตามในชีท
 
         async function getGoogleSheetData(sheetId, sheetName = '') {
             let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
-            if (sheetName) {
-                url += `&sheet=${encodeURIComponent(sheetName)}`;
-            }
+            if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
 
             try {
                 const res = await fetch(url);
-                if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูลได้");
-                
-                // อ่านข้อมูลกลับมาเป็นข้อความดิบ (ห้ามใช้ res.json())
                 const text = await res.text();
-                
-                // สกัดเอาเฉพาะก้อน JSON { ... } ตัด /*O_o*/ ออกไป
                 const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-                if (!match || !match[1]) throw new Error("รูปแบบข้อมูลไม่ถูกต้อง");
+                if (!match || !match[1]) return [];
 
                 const data = JSON.parse(match[1]);
                 if (!data.table || !data.table.rows) return [];
 
-                // ดึงชื่อคอลัมน์
                 const cols = data.table.cols.map(c => (c && c.label) ? c.label : '');
 
-                // แปลงข้อมูลเป็น Array
                 return data.table.rows.map(row => {
                     const obj = {};
                     row.c.forEach((cell, i) => {
@@ -56,48 +257,61 @@
                     });
                     return obj;
                 });
-
             } catch (e) {
-                console.error("Fetch Error:", e);
+                console.error(e);
                 return [];
             }
         }
 
-        async function renderTable() {
+        async function renderList() {
             const data = await getGoogleSheetData(SPREADSHEET_ID, SHEET_NAME);
-            
             document.getElementById('loading').style.display = 'none';
 
             if (data.length === 0) {
-                alert("ไม่สามารถดึงข้อมูลได้ กรุณาเช็กสิทธิ์การแชร์ของชีทหรือ ID");
+                document.getElementById('loading').innerText = 'ไม่พบข้อมูล หรือยังไม่ได้เปิดแชร์ชีท';
+                document.getElementById('loading').style.display = 'block';
                 return;
             }
 
-            const table = document.getElementById('dataTable');
-            const thead = document.getElementById('tableHead');
-            const tbody = document.getElementById('tableBody');
-            table.style.display = 'table';
+            const container = document.getElementById('listContainer');
+            let html = '';
 
-            // สร้าง Header
-            const headers = Object.keys(data[0]);
-            let headHtml = '<tr>';
-            headers.forEach(h => headHtml += `<th>${h || 'ไม่มีชื่อคอลัมน์'}</th>`);
-            headHtml += '</tr>';
-            thead.innerHTML = headHtml;
+            data.forEach((item) => {
+                const title = item['ชื่อ'] || item['Name'] || item['title'] || Object.values(item)[0] || 'Item';
+                const subTitle = item['รายละเอียด'] || item['Detail'] || item['subtitle'] || Object.values(item)[1] || '';
+                const link = item['ลิงก์'] || item['Link'] || item['url'] || '#';
+                const status = (item['สถานะ'] || item['Status'] || '').toString().toLowerCase();
 
-            // ใส่ Rows
-            let bodyHtml = '';
-            data.forEach(row => {
-                bodyHtml += '<tr>';
-                headers.forEach(h => {
-                    bodyHtml += `<td>${row[h] !== null ? row[h] : ''}</td>`;
-                });
-                bodyHtml += '</tr>';
+                let dotClass = 'gray';
+                if (status.includes('สำเร็จ') || status.includes('success') || status.includes('active')) dotClass = 'green';
+                if (status.includes('ล้มเหลว') || status.includes('fail') || status.includes('error')) dotClass = 'red';
+
+                const badgeText = item['ประเภท'] || item['Badge'] || 'Preview';
+                const badgeClass = badgeText.toLowerCase() === 'production' ? 'badge production' : 'badge';
+
+                html += `
+                <div class="list-item">
+                    <div class="item-left">
+                        <div class="status-dot ${dotClass}"></div>
+                        <div>
+                            <div class="item-title">${title}</div>
+                            <div class="item-subtitle">${subTitle}</div>
+                        </div>
+                    </div>
+                    <div class="item-right">
+                        <a href="${link}" target="_blank" class="${badgeClass}">${badgeText}</a>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+                `;
             });
-            tbody.innerHTML = bodyHtml;
+
+            container.innerHTML = html;
         }
 
-        renderTable();
+        renderList();
     </script>
+</body>
+</html>
 </body>
 </html>
