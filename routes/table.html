@@ -519,7 +519,31 @@
             container.innerHTML = html;
         }
 
-        // ฟังก์ชันแยกชื่อชีทตามตัวเลขสายรถ
+        // ==========================================
+        // 4. Render หน้ารายละเอียด (Detail View)
+        // ==========================================
+        // ฟังก์ชันแปลง Date(YYYY,M,D) เป็น D MMM YYYY (เช่น 11 Jan 2025)
+        function formatDateString(rawDate) {
+            if (!rawDate) return '';
+            
+            // ตรวจสอบว่าตรงกับรูปแบบ Date(YYYY,M,D) หรือไม่
+            const match = rawDate.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (match) {
+                const year = match[1];
+                const monthIndex = parseInt(match[2], 10); // 0 = Jan, 1 = Feb, ...
+                const day = match[3];
+        
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const monthName = months[monthIndex] || '';
+        
+                return `${day} ${monthName} ${year}`;
+            }
+        
+            // หากไม่อยู่ในรูปแบบ Date(...) ให้คืนค่าเดิมกลับไป
+            return rawDate;
+        }
+
+               // ฟังก์ชันแยกชื่อชีทตามตัวเลขสายรถ
         function getSheetNameByBusNo(busNo) {
             // ดึงเฉพาะตัวเลขที่อยู่หน้าช่องว่างแรก เช่น "2 (3-1)" -> "2"
             const firstNumberMatch = String(busNo).trim().match(/^(\d+)/);
@@ -583,30 +607,6 @@
             }
             // กรณี n/a ไม่ต้องแสดงอะไร
             return '';
-        }
-
-        // ==========================================
-        // 4. Render หน้ารายละเอียด (Detail View)
-        // ==========================================
-        // ฟังก์ชันแปลง Date(YYYY,M,D) เป็น D MMM YYYY (เช่น 11 Jan 2025)
-        function formatDateString(rawDate) {
-            if (!rawDate) return '';
-            
-            // ตรวจสอบว่าตรงกับรูปแบบ Date(YYYY,M,D) หรือไม่
-            const match = rawDate.match(/Date\((\d+),(\d+),(\d+)\)/);
-            if (match) {
-                const year = match[1];
-                const monthIndex = parseInt(match[2], 10); // 0 = Jan, 1 = Feb, ...
-                const day = match[3];
-        
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const monthName = months[monthIndex] || '';
-        
-                return `${day} ${monthName} ${year}`;
-            }
-        
-            // หากไม่อยู่ในรูปแบบ Date(...) ให้คืนค่าเดิมกลับไป
-            return rawDate;
         }
 
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
