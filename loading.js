@@ -67,24 +67,33 @@ function hideLoading() {
 
     if (!screen) return;
 
-    // Step 1: เมื่อข้อมูลโหลดเสร็จ ให้หยุดการเคลื่อนที่ของถนน ล้อรถ และการสั่นของรถ
-    if (road) road.style.animationPlayState = 'paused';
-    if (bus) bus.style.animationPlayState = 'paused';
-    if (wheel1) wheel1.style.animationPlayState = 'paused';
-    if (wheel2) wheel2.style.animationPlayState = 'paused';
+    // หน่วง 1 จังหวะและรอ Browser Render หน้าเว็บหลักลงจอให้ชัวร์ก่อนสั่งปิด Loading
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
 
-    // Step 2: สั่งให้ป้าย STOP สไลด์เข้ามาจอดข้างรถ
-    if (stopSign) {
-        stopSign.classList.add('arrived');
-    }
+            // Step 1: หยุดถนนและรถวิ่ง (เปลี่ยนเป็นจังหวะจอด)
+            if (road) road.style.animationPlayState = 'paused';
+            if (bus) bus.style.animationPlayState = 'paused';
+            if (wheel1) wheel1.style.animationPlayState = 'paused';
+            if (wheel2) wheel2.style.animationPlayState = 'paused';
 
-    // Step 3: เลื่อนป้ายเข้ามาถึงที่แล้ว ค่อย Fade Out เปิดเข้าหน้าเว็บ
-    setTimeout(() => {
-        screen.classList.add('fade-out');
-        setTimeout(() => {
-            screen.style.display = 'none';
-        }, 400);
-    }, 600);
+            // Step 2: สั่งให้ป้าย STOP สไลด์เข้ามา
+            if (stopSign) {
+                stopSign.classList.add('arrived');
+            }
+
+            // Step 3: เลื่อนป้ายเสร็จแล้ว ค่อยเริ่ม Fade Out
+            setTimeout(() => {
+                screen.classList.add('fade-out');
+                
+                // Step 4: ซ่อนพ้นสายตา
+                setTimeout(() => {
+                    screen.style.display = 'none';
+                }, 500);
+            }, 650); // ปรับเวลาให้ป้ายมาถึงตรงกลางเต็มๆ ก่อน
+
+        });
+    });
 }
 
 // 4. เปลี่ยนข้อความในกรณีเกิด Error หรือข้อความพิเศษ
