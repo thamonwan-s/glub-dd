@@ -42,7 +42,6 @@ function initLoadingUI() {
             </div>
 
           </div>
-          <!-- ปรับข้อความตามต้องการ -->
           <p class="loading-text" id="loading-text">LOADING . . .</p>
         </div>
     `;
@@ -56,6 +55,15 @@ function initLoadingUI() {
     }
 }
 
+// Helper: การันตีรอให้ Browser วาด (Paint) หน้าเว็บหลักลงเสนื้อจอก่อนค่อยรัน Callback
+function runAfterPaint(callback) {
+    requestAnimationFrame(() => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+    });
+}
+
 // 3. ฟังก์ชันซ่อนหน้า Loading (หยุดถนน -> เลื่อนป้าย STOP -> จางหาย)
 function hideLoading() {
     const stopSign = document.getElementById('bus-stop-element');
@@ -67,32 +75,28 @@ function hideLoading() {
 
     if (!screen) return;
 
-    // หน่วง 1 จังหวะและรอ Browser Render หน้าเว็บหลักลงจอให้ชัวร์ก่อนสั่งปิด Loading
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+    // รันหลังจาก Browser วาดองค์ประกอบหน้าเว็บหลักบน Screen เรียบร้อยแล้วเท่านั้น
+    runAfterPaint(() => {
+        // Step 1: หยุดแอนิเมชันถนนและล้อรถ
+        if (road) road.style.animationPlayState = 'paused';
+        if (bus) bus.style.animationPlayState = 'paused';
+        if (wheel1) wheel1.style.animationPlayState = 'paused';
+        if (wheel2) wheel2.style.animationPlayState = 'paused';
 
-            // Step 1: หยุดถนนและรถวิ่ง (เปลี่ยนเป็นจังหวะจอด)
-            if (road) road.style.animationPlayState = 'paused';
-            if (bus) bus.style.animationPlayState = 'paused';
-            if (wheel1) wheel1.style.animationPlayState = 'paused';
-            if (wheel2) wheel2.style.animationPlayState = 'paused';
+        // Step 2: เลื่อนป้าย STOP เข้ามาตรงกลางหารถ
+        if (stopSign) {
+            stopSign.classList.add('arrived');
+        }
 
-            // Step 2: สั่งให้ป้าย STOP สไลด์เข้ามา
-            if (stopSign) {
-                stopSign.classList.add('arrived');
-            }
+        // Step 3: เมื่อป้าย STOP เลื่อนมาหยุดตรงกลางแล้ว ให้เริ่ม Fade Out หน้านี้ออก
+        setTimeout(() => {
+            screen.classList.add('fade-out');
 
-            // Step 3: เลื่อนป้ายเสร็จแล้ว ค่อยเริ่ม Fade Out
+            // Step 4: ปิดการใช้งาน Element ทันทีเมื่อ Fade Out ครบเวลา
             setTimeout(() => {
-                screen.classList.add('fade-out');
-                
-                // Step 4: ซ่อนพ้นสายตา
-                setTimeout(() => {
-                    screen.style.display = 'none';
-                }, 500);
-            }, 650); // ปรับเวลาให้ป้ายมาถึงตรงกลางเต็มๆ ก่อน
-
-        });
+                screen.style.display = 'none';
+            }, 400);
+        }, 550);
     });
 }
 
