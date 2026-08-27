@@ -539,8 +539,15 @@
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
             const busNo = decodeURIComponent(index);
-            const data = globalBusData.find(item => String(item.busNo).trim()===busNo.trim());
-            if (!data) return;
+            const cleanTarget = String(busNo).replace(/\s+/g, '').toLowerCase();
+            const data = globalBusData.find(item => {
+                const cleanItem = String(item.busNo).replace(/\s+/g, '').toLowerCase();
+                return cleanItem === cleanTarget;
+            });
+            if (!data) {
+                console.error("หา busNo ไม่เจอ! ค่าที่ส่งมาคือ:", busNo, "ข้อมูลใน globalBusData มีดังนี้:", globalBusData);
+                return;
+            }
 
             const contentDiv = document.getElementById('detailContent');
             const formattedDate = formatDateString(data.lastUpdated);
