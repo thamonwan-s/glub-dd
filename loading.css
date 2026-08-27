@@ -35,7 +35,7 @@
   align-items: center;
   z-index: 99999;
   /* ปรับการ Fade ให้เนียนและสมูทขึ้น */
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
 }
 
