@@ -24,66 +24,80 @@
         const SPREADSHEET_ID = '151hB3s9N7M63IK8guYJslvORuDQIp9W2eunkv_HUBN0'; // ใส่ ID ชีทของคุณที่นี่
         const SHEET_NAME = 'รถบริการตลอดคืน 🌙'; // ใส่ชื่อแท็บภาษาไทยหรืออังกฤษตรงตามในชีท
 
-        async function renderSheet() {
+        async function getGoogleSheetData(sheetId, sheetName = '') {
+            let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+            if (sheetName) {
+                url += `&sheet=${encodeURIComponent(sheetName)}`;
+            }
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูลได้");
+                
+                // อ่านข้อมูลกลับมาเป็นข้อความดิบ (ห้ามใช้ res.json())
+                const text = await res.text();
+                
+                // สกัดเอาเฉพาะก้อน JSON { ... } ตัด /*O_o*/ ออกไป
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+                if (!match || !match[1]) throw new Error("รูปแบบข้อมูลไม่ถูกต้อง");
+
+                const data = JSON.parse(match[1]);
+                if (!data.table || !data.table.rows) return [];
+
+                // ดึงชื่อคอลัมน์
+                const cols = data.table.cols.map(c => (c && c.label) ? c.label : '');
+
+                // แปลงข้อมูลเป็น Array
+                return data.table.rows.map(row => {
+                    const obj = {};
+                    row.c.forEach((cell, i) => {
+                        const key = cols[i] || `col_${i}`;
+                        obj[key] = cell ? (cell.f !== undefined ? cell.f : cell.v) : '';
+                    });
+                    return obj;
+                });
+
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                return [];
+            }
+        }
+
+        async function renderTable() {
             const data = await getGoogleSheetData(SPREADSHEET_ID, SHEET_NAME);
             
             document.getElementById('loading').style.display = 'none';
 
             if (data.length === 0) {
-                alert("ไม่สามารถดึงข้อมูลได้ กรุณาเช็กสิทธิ์การเปิดแชร์ของชีท");
+                alert("ไม่สามารถดึงข้อมูลได้ กรุณาเช็กสิทธิ์การแชร์ของชีทหรือ ID");
                 return;
             }
 
-            // แสดงตาราง
             const table = document.getElementById('dataTable');
             const thead = document.getElementById('tableHead');
             const tbody = document.getElementById('tableBody');
             table.style.display = 'table';
 
-            // 1. สร้างหัวตาราง (Headers)
+            // สร้าง Header
             const headers = Object.keys(data[0]);
             let headHtml = '<tr>';
             headers.forEach(h => headHtml += `<th>${h || 'ไม่มีชื่อคอลัมน์'}</th>`);
             headHtml += '</tr>';
             thead.innerHTML = headHtml;
 
-            // 2. ใส่ข้อมูลในแถวตาราง (Rows)
+            // ใส่ Rows
             let bodyHtml = '';
             data.forEach(row => {
                 bodyHtml += '<tr>';
                 headers.forEach(h => {
-                    bodyHtml += `<td>${row[h] !== null ? row[h] : '-'}</td>`;
+                    bodyHtml += `<td>${row[h] !== null ? row[h] : ''}</td>`;
                 });
                 bodyHtml += '</tr>';
             });
             tbody.innerHTML = bodyHtml;
         }
 
-        // ฟังก์ชันดึงข้อมูล GViz
-        async function getGoogleSheetData(sheetId, sheetName) {
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-            try {
-                const res = await fetch(url);
-                const text = await res.json ? await res.json() : await res.text();
-                const jsonString = text.substring(47, text.length - 2);
-                const data = JSON.parse(jsonString);
-
-                const cols = data.table.cols.map(c => c ? c.label : '');
-                return data.table.rows.map(row => {
-                    const obj = {};
-                    row.c.forEach((cell, i) => {
-                        obj[cols[i] || `col_${i}`] = cell ? cell.v : null;
-                    });
-                    return obj;
-                });
-            } catch (e) {
-                console.error(e);
-                return [];
-            }
-        }
-
-        // เรียกใช้งานเมื่อโหลดหน้าเว็บ
-        renderSheet();
+        renderTable();
     </script>
 </body>
 </html>
