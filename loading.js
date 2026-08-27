@@ -1,7 +1,13 @@
 // 1. ปรับธีมทันทีที่สคริปต์ทำงาน
 (function applyInitialTheme() {
     const savedTheme = localStorage.getItem('user-theme') || 'system';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    if (savedTheme === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
 })();
 
 // 2. ฟังก์ชันสร้าง HTML ของ Loading แปะลงใน <body> อัตโนมัติ
@@ -44,10 +50,25 @@ function initLoadingUI() {
     }
 }
 
-// 3. ฟังก์ชันซ่อนหน้า Loading
+// 3. ฟังก์ชันซ่อนหน้า Loading (เลื่อนป้ายเข้ากลาง -> จางหาย)
 function hideLoading() {
-    const screen = document.getElementById('loading-screen');
-    if (screen) screen.style.display = 'none';
+    const stopSign = document.getElementById('bus-stop-element');
+    const loadingScreen = document.getElementById('loading-screen');
+
+    if (stopSign && loadingScreen) {
+        // Step 1: สั่งให้ป้ายเลื่อนเข้ามาตรงกลาง (ใช้เวลา 0.6 วินาที)
+        stopSign.classList.add('slide-center');
+
+        // Step 2: เมื่อป้ายเลื่อนถึงตรงกลางแล้ว ให้หน้า Loading จางหายไป
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            
+            // Step 3: ซ่อน Element ออกจาก DOM หลัง Fade Out เสร็จ
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 400);
+        }, 600);
+    }
 }
 
 // 4. ฟังก์ชันเปลี่ยนข้อความ Loading
