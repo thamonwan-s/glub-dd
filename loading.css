@@ -59,7 +59,7 @@
   bottom: 8px;
   left: 0;
   width: 200%;
-  height: 3px;
+  height: 1.5px;
   background-image: repeating-linear-gradient(
     to right,
     var(--road-color) 0px,
@@ -67,7 +67,7 @@
     transparent 8px,
     transparent 18px
   );
-  animation: moveRoad 0.7s linear infinite;
+  animation: moveRoad 0.4s linear infinite;
 }
 
 @keyframes moveRoad {
