@@ -539,7 +539,7 @@
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
             const busNo = decodeURIComponent(index);
-            const data = globalBusData.find(item => String(item.busNo).trim()===busNo);
+            const data = globalBusData.find(item => String(item.busNo).trim()===busNo.trim());
             if (!data) return;
 
             const contentDiv = document.getElementById('detailContent');
