@@ -760,14 +760,12 @@
                 return;
             }
 
-            // 🌟 ดึงข้อมูลประเภทผู้ให้บริการ และสร้าง HTML โลโก้ (จุดที่ขาดไป)
-            const busSearchKey = typeof extractBusSearchKey === 'function' && typeof cleanBusNoKey === 'function'
-                ? extractBusSearchKey(cleanBusNoKey(data.busNo))
-                : data.busNo;
-            const operatorType = typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined'
-                ? getBusOperatorType(busSearchKey, allSheetsData)
+            // 🌟 ดึงข้อมูลประเภทผู้ให้บริการสำหรับหน้า Detail (ส่ง data.busNo เข้าไป)
+            const operatorType = (typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined')
+                ? getBusOperatorType(data.busNo, allSheetsData)
                 : 'n/a';
-            const logoHtml = typeof renderOperatorLogos === 'function' 
+            
+            const logoHtml = (typeof renderOperatorLogos === 'function') 
                 ? renderOperatorLogos(operatorType) 
                 : '';
 
@@ -823,7 +821,7 @@
                 <div class="route-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
                         <div class="route-number" style="margin: 0;">${data.busNo}</div>
-                        <div style="flex-shrink: 0; display: flex; align-items: center;">${logoHtml}</div>
+                        <div class="item-right" style="flex-shrink: 0; display: flex; align-items: center;">${logoHtml}</div>
                     </div>
                     <div class="route-name">${data.routeName}</div>
                     ${formattedDate ? `
