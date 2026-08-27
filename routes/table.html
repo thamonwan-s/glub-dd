@@ -429,19 +429,17 @@
                     // ถ้าเจอค่าใน A แสดงว่าเป็น "รถเมล์สายใหม่"
                     if (valA !== '') {
                         if (currentRoute) busRoutes.push(currentRoute);
-                        const hasNoSchedule = (valD === '');
-
                         currentRoute = {
-                            busNo: valA,
-                            routeName: valB,
-                            lastUpdated: valG || '',
-                            noScheduleText: hasNoSchedule ? valC : '',
-                            stops: []
-                        };
+                        busNo: valA,
+                        routeName: valB,
+                        lastUpdated: valG || '',
+                        noScheduleText: (valC && valD === '') ? valC : '', // เก็บข้อความแจ้งเตือนเฉพาะเมื่อมีข้อความใน C แต่ไม่มีเวลาใน D
+                        stops: []
+                    };
                     }
 
                     // หากคอลัมน์ C มีชื่อป้าย ให้นับเป็นข้อมูลป้ายของสายนั้นๆ
-                    if (currentRoute && !currentRoute.noScheduleText && valC !== '') {
+                    if (valD !== '' || valE !== '' || valF !== '') {
                         currentRoute.stops.push({
                             stopName: valC,
                             weekdayTime: valD,
