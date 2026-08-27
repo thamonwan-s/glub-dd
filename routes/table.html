@@ -760,12 +760,30 @@
                 return;
             }
 
-            // 🌟 ดึงข้อมูลประเภทผู้ให้บริการสำหรับหน้า Detail (ส่ง data.busNo เข้าไป)
-            const operatorType = (typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined')
-                ? getBusOperatorType(data.busNo, allSheetsData)
-                : 'n/a';
+            // 🌟 ดึงข้อมูลประเภทผู้ให้บริการสำหรับหน้า Detail
+            let operatorType = 'n/a';
             
-            const logoHtml = (typeof renderOperatorLogos === 'function') 
+            if (typeof getBusOperatorType === 'function' && typeof allSheetsData !== 'undefined') {
+                // 1. ส่งแบบปกติก่อน
+                operatorType = getBusOperatorType(data.busNo, allSheetsData);
+            
+                // 2. ถ้ายังได้ n/a ให้ลองส่งแบบ String trim เผื่อมีช่องว่างติดมา
+                if (operatorType === 'n/a' && data.busNo) {
+                    operatorType = getBusOperatorType(String(data.busNo).trim(), allSheetsData);
+                }
+            }
+            
+            // ถ้ามี owner ติดมากับตัว data เอง สามารถใช้ดักเป็นทางเลือกสุดท้าย
+            if (operatorType === 'n/a' && data.owner) {
+                const ownerText = String(data.owner);
+                const hasTSB = ownerText.includes("ไทยสมายล์บัส");
+                const hasBMTA = ownerText.includes("ขสมก");
+                if (hasTSB && hasBMTA) operatorType = "both";
+                else if (hasTSB) operatorType = "tsb";
+                else if (hasBMTA) operatorType = "bmta";
+            }
+            
+            const logoHtml = typeof renderOperatorLogos === 'function' 
                 ? renderOperatorLogos(operatorType) 
                 : '';
 
