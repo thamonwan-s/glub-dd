@@ -1,5 +1,4 @@
 async function getGoogleSheetData(sheetId, sheetName = '') {
-    // ถ้าไม่ได้ใส่ชื่อแท็บ ให้ดึงแท็บแรกสุดอัตโนมัติ
     let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
     if (sheetName) {
         url += `&sheet=${encodeURIComponent(sheetName)}`;
@@ -7,28 +6,37 @@ async function getGoogleSheetData(sheetId, sheetName = '') {
 
     try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Network response was not ok");
+        if (!res.ok) throw new Error("ไม่สามารถเชื่อมต่อ Google Sheet ได้");
         
+        // 1. อ่านข้อมูลกลับมาเป็น Text ดิบ (ห้ามใช้ res.json())
         const text = await res.text();
         
-        // ตัดข้อความหุ้มของ Google GViz API
-        const jsonString = text.substring(47, text.length - 2);
-        const data = JSON.parse(jsonString);
+        // 2. ใช้ Regex สกัดเอาเฉพาะก้อน { ... } ที่เป็น JSON จริงๆ ออกมา
+        const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+        
+        if (!match || !match[1]) {
+            throw new Error("รูปแบบข้อมูลจาก Google Sheet ไม่ถูกต้อง");
+        }
+
+        // 3. แปลงข้อความที่ตัดสมบูรณ์แล้วเป็น JSON Object
+        const data = JSON.parse(match[1]);
 
         if (!data.table || !data.table.rows) return [];
 
-        // ดึงชื่อหัวตาราง
-        const cols = data.table.cols.map(c => c ? c.label : '');
+        // 4. ดึงชื่อหัวตาราง (Headers)
+        const cols = data.table.cols.map(c => (c && c.label) ? c.label : '');
 
-        // แปลงเป็น Array of Objects
+        // 5. แปลงแถวข้อมูล (Rows) เป็น Array of Objects
         return data.table.rows.map(row => {
             const obj = {};
             row.c.forEach((cell, i) => {
                 const key = cols[i] || `col_${i}`;
-                obj[key] = cell ? cell.v : null;
+                // cell.v คือค่าดิบ (Value), cell.f คือค่าที่จัดฟอร์แมตแล้ว (Formatted Value)
+                obj[key] = cell ? (cell.f !== undefined ? cell.f : cell.v) : null;
             });
             return obj;
         });
+
     } catch (e) {
         console.error("Fetch Google Sheet Error:", e);
         return [];
