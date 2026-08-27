@@ -622,7 +622,6 @@
                     
                 console.log("--> [DetailView] busNo:", item.busNo);
                 console.log("--> [DetailView] operatorType ที่ได้:", operatorType);
-                console.log("--> [DetailView] allSheetsData ปัจจุบัน:", allSheetsData);
             
                 const logoHtml = typeof renderOperatorLogos === 'function' 
                     ? renderOperatorLogos(operatorType) 
@@ -700,9 +699,6 @@
             if (!Array.isArray(rows) || rows.length === 0) return "n/a";
             const cleanBusNo = String(busNo).trim();
             const searchKey = extractBusSearchKey(cleanBusNoKey(busNo));
-
-            console.group(`🔍 [เช็กสาย: "${cleanBusNo}"]`);
-            console.log(`📌 1. ชีทเป้าหมายที่คำนวณได้:`, targetSheetName);
         
             // ค้นหาแถวที่คอลัมน์ A มีชื่อสายทั้งคำอยู่ในเซลล์
             let matchedRow = rows.find(row => {
@@ -759,10 +755,6 @@
         function showDetailView(index) {
             const busNo = decodeURIComponent(index);
             const data = globalBusData.find(item => String(item.busNo).trim() === String(busNo).trim());
-            console.log("--> ค่า index ที่รับเข้ามา:", index);
-            console.log("--> ค่า busNo หลังถอดรหัส:", busNo);
-            console.log("--> รายการ busNo ทั้งหมดที่มีในระบบ:", globalBusData.map(b => b.busNo));
-            console.log("--> ผลการหา data:", data);
             if (!data) {
                 console.error("หา busNo ไม่เจอ! ค่าที่ส่งมาคือ:", busNo, "ข้อมูลใน globalBusData มีดังนี้:", globalBusData);
                 return;
@@ -781,9 +773,6 @@
             
             // สร้างการ์ดแยกของแต่ละป้าย
             let stopsCardsHtml = '';
-            console.log("-->", data.noScheduleText);
-            console.log("-->", !data.stops);
-            console.log("-->", data.stops.length === 0);
 
             const hasNoStops = !data.stops || data.stops.length === 0;
             if (data.noScheduleText || hasNoStops) {
