@@ -550,9 +550,7 @@
             }
 
             const contentDiv = document.getElementById('detailContent');
-            const formattedDate = (typeof formatDateString === 'function' && data.lastUpdated) 
-            ? formatDateString(data.lastUpdated) 
-            : (data.lastUpdated || '');
+            const formattedDate = data.lastUpdated ? formatDateString(data.lastUpdated) : 'n/a';
             
             // สร้างการ์ดแยกของแต่ละป้าย
             let stopsCardsHtml = '';
