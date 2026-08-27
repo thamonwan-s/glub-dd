@@ -486,6 +486,7 @@
                 } catch (e) {
                     console.warn(`ไม่สามารถดึงข้อมูลจากชีท ${sName} ได้:`, e);
                     allSheetsData[sName] = [];
+                    console.log(`ชีท "${sName}": ดึงได้ ${allSheetsData[sName].length} แถว`, allSheetsData[sName][0]);
                 }
             }));
 
