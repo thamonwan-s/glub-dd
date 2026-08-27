@@ -286,16 +286,49 @@
                 const data = JSON.parse(match[1]);
                 if (!data.table || !data.table.rows) return [];
 
-                const cols = data.table.cols.map(c => (c && c.label) ? c.label : '');
+                const rawRows = data.table.rows;
+                const parsedData = [];
+                let emptyCellCount = 0;
 
-                return data.table.rows.map(row => {
-                    const obj = {};
-                    row.c.forEach((cell, i) => {
-                        const key = cols[i] || `col_${i}`;
-                        obj[key] = cell ? (cell.f !== undefined ? cell.f : cell.v) : '';
+                // วนลูปอ่านข้อมูลทีละแถว และดึงตามตำแหน่ง Index คอลัมน์ (0=A, 1=B, 2=C, 3=D, 4=E)
+                for (let i = 0; i < rawRows.length; i++) {
+                    const row = rawRows[i];
+                    
+                    // ดึงค่าคอลัมน์ A (Index 0)
+                    const cellA = row.c && row.c[0] ? (row.c[0].v !== null ? String(row.c[0].v).trim() : '') : '';
+
+                    // เช็กกรณีเซลล์ว่างในคอลัมน์ A
+                    if (cellA === '') {
+                        emptyCellCount++;
+                        // ถ้าเจอเซลล์ว่างติดกัน 2 แถว ให้หยุดการดึงข้อมูลทันที
+                        if (emptyCellCount >= 2) {
+                            break; 
+                        }
+                        // ข้ามแถวที่ 2 ของชุดข้อมูล (แถวที่เป็นเซลล์ว่าง) เพื่อไม่ให้ชุดข้อมูลซ้ำซ้อน
+                        continue; 
+                    } else {
+                        // เจอข้อมูล ให้รีเซ็ตตัวคูณเซลล์ว่างกลับเป็น 0
+                        emptyCellCount = 0; 
+                    }
+
+                    // สกัดค่าในแต่ละคอลัมน์ (A, B, C, D, E)
+                    const valA = cellA;
+                    const valB = row.c && row.c[1] && row.c[1].v !== null ? row.c[1].v : '';
+                    const valC = row.c && row.c[2] && row.c[2].v !== null ? row.c[2].v : '';
+                    const valD = row.c && row.c[3] && row.c[3].v !== null ? row.c[3].v : '';
+                    const valE = row.c && row.c[4] && row.c[4].v !== null ? row.c[4].v : '#'; // สมมติ E เป็นลิงก์
+
+                    parsedData.push({
+                        colA: valA,
+                        colB: valB,
+                        colC: valC,
+                        colD: valD,
+                        link: valE
                     });
-                    return obj;
-                });
+                }
+
+                return parsedData;
+
             } catch (e) {
                 console.error("Fetch Sheet Error:", e);
                 return [];
@@ -307,7 +340,7 @@
             document.getElementById('loading').style.display = 'none';
 
             if (data.length === 0) {
-                document.getElementById('loading').innerText = 'ไม่พบข้อมูล หรือยังไม่ได้เปิดแชร์ชีท';
+                document.getElementById('loading').innerText = 'ไม่พบข้อมูล หรือสิ้นสุดข้อมูล';
                 document.getElementById('loading').style.display = 'block';
                 return;
             }
@@ -316,29 +349,23 @@
             let html = '';
 
             data.forEach((item) => {
-                const title = item['ชื่อ'] || item['Name'] || item['title'] || Object.values(item)[0] || 'Item';
-                const subTitle = item['รายละเอียด'] || item['Detail'] || item['subtitle'] || Object.values(item)[1] || '';
-                const link = item['ลิงก์'] || item['Link'] || item['url'] || '#';
-                const status = (item['สถานะ'] || item['Status'] || '').toString().toLowerCase();
+                // 1. หัวข้อบน (Title): A + ช่องว่าง + B (ตัวหนาสีเข้ม)
+                const titleText = `${item.colA} ${item.colB}`.trim();
 
-                let dotClass = 'gray';
-                if (status.includes('สำเร็จ') || status.includes('success') || status.includes('active')) dotClass = 'green';
-                if (status.includes('ล้มเหลว') || status.includes('fail') || status.includes('error')) dotClass = 'red';
-
-                const badgeText = item['ประเภท'] || item['Badge'] || 'Preview';
-                const badgeClass = badgeText.toLowerCase() === 'production' ? 'badge production' : 'badge';
+                // 2. รายละเอียดล่าง (Subtitle): C (ตัวหนา) + ช่องว่าง + D (ตัวบาง)
+                const subtitleHtml = `<strong style="font-weight: 600; color: var(--text-main);">${item.colC}</strong> ${item.colD}`.trim();
 
                 html += `
                 <div class="list-item">
                     <div class="item-left">
-                        <div class="status-dot ${dotClass}"></div>
+                        <div class="status-dot gray"></div>
                         <div>
-                            <div class="item-title">${title}</div>
-                            <div class="item-subtitle">${subTitle}</div>
+                            <div class="item-title">${titleText}</div>
+                            <div class="item-subtitle">${subtitleHtml}</div>
                         </div>
                     </div>
                     <div class="item-right">
-                        <a href="${link}" target="_blank" class="${badgeClass}">${badgeText}</a>
+                        <a href="${item.link}" target="_blank" class="badge">More</a>
                         <span class="arrow">›</span>
                     </div>
                 </div>
