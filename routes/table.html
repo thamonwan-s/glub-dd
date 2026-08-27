@@ -426,26 +426,25 @@
                     const valF = getVal(5); // เวลา เสาร์-อาทิตย์ (เพิ่มเติม)
                     const valG = getVal(6); // วันอัปเดตล่าสุด
 
-                    if (valA === '') {
-                        if (valD === '') break; 
-                    } else {
-                        emptyCellCount = 0; // เจอข้อมูลใหม่ รีเซ็ตนับว่าง
-                    }
+                    if (valA === '' && valD === '' && valC === '') break;
 
                     // ถ้าเจอค่าใน A แสดงว่าเป็น "รถเมล์สายใหม่"
                     if (valA !== '') {
                         if (currentRoute) busRoutes.push(currentRoute);
+                        // ตรวจสอบเงื่อนไข: ถ้า D1 เป็นช่องว่าง ให้ดึงข้อความจาก C1 ไว้ใน noScheduleText
+                        const hasNoSchedule = (valD === '');
 
                         currentRoute = {
                             busNo: valA,
                             routeName: valB,
                             lastUpdated: valG || '',
+                            noScheduleText: hasNoSchedule ? valC : '',
                             stops: []
                         };
                     }
 
                     // หากคอลัมน์ C มีชื่อป้าย ให้นับเป็นข้อมูลป้ายของสายนั้นๆ
-                    if (currentRoute && valC !== '') {
+                    if (currentRoute && !currentRoute.noScheduleText && valC !== '') {
                         currentRoute.stops.push({
                             stopName: valC,
                             weekdayTime: valD,
@@ -553,6 +552,16 @@
             
             // สร้างการ์ดแยกของแต่ละป้าย
             let stopsCardsHtml = '';
+            if (data.noScheduleText) {
+                // กรณี D1 เป็นช่องว่าง: แสดงข้อความจาก C1 และไม่ต้องสร้างการ์ดป้าย
+                stopsContentHtml = `
+                <div class="stop-card" style="text-align: center; padding: 24px 16px;">
+                    <svg class="icon-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px; opacity: 0.6;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <div style="font-size: 15px; font-weight: 500; opacity: 0.9;">${data.noScheduleText}</div>
+                </div>
+                `;
+            } else {
+            // กรณีปกติ: วนลูปสร้างการ์ดรายการป้าย
             data.stops.forEach((stop) => {
                 stopsCardsHtml += `
                 <div class="stop-card">
