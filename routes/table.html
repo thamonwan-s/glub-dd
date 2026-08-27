@@ -145,8 +145,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 18px 0;
+            padding: 18px 12px; /* เพิ่ม padding ด้านข้างเล็กน้อยให้กดง่ายขึ้น */
             border-bottom: 1px solid var(--border-color);
+            cursor: pointer; /* แสดงรูปมือเมื่อวางเมาส์ */
+            border-radius: 8px;
         }
 
         .list-item:hover {
@@ -497,7 +499,7 @@
                 const subtitleHtml = `${item.routeName}`;
 
                 html += `
-                <div class="list-item">
+                <div class="list-item" onclick="showDetailViewByBusNo('${item.busNo.replace(/'/g, "\\'")}')">
                     <div class="item-left">
                         <div class="status-dot gray"></div>
                         <div>
@@ -541,7 +543,7 @@
         }
         
         function showDetailView(index) {
-            const data = globalBusData[index];
+            const data = globalBusData.find(item => item.busNo === busNo);
             if (!data) return;
 
             const contentDiv = document.getElementById('detailContent');
