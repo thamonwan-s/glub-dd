@@ -490,7 +490,7 @@
                 
                 // ดึงข้อมูลป้ายแรกมาโชว์ตัวอย่างในหน้าหลัก
                 const subtitleHtml = `${item.routeName}`;
-                const safeBusNo = String(item.busNo).replace(/'/g, "\\'");
+                const safeBusNo = encodeURIComponent(item.busNo);
 
                 html += `
                 <div class="list-item" onclick="showDetailView('${safeBusNo}')">
@@ -538,7 +538,8 @@
 
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
-            const data = globalBusData.find(item => String(item.busNo) === String(index));
+            const busNo = decodeURIComponent(index);
+            const data = globalBusData.find(item => String(item.busNo).trim());
             if (!data) return;
 
             const contentDiv = document.getElementById('detailContent');
