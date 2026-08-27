@@ -419,6 +419,16 @@
                 .trim();
         }
 
+        function extractBusSearchKey(rawBusNo) {
+            if (!rawBusNo) return '';
+            const trimmed = rawBusNo.toString().trim();
+            const matchWithParentheses = trimmed.match(/^([^(]+)\s*\([^)]*\)/);
+            if (matchWithParentheses) {
+                return matchWithParentheses[1].trim();
+            }
+            return trimmed;
+        }
+
         async function getGoogleSheetData(sheetId, sheetName = 'รถบริการตลอดคืน 🌙') {
             let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
             if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
@@ -716,24 +726,6 @@
             if (hasTSB) return "tsb";
             if (hasBMTA) return "bmta";
             return "n/a";
-        }
-
-        function extractBusSearchKey(rawBusNo) {
-            if (!rawBusNo) return '';
-            
-            const trimmed = rawBusNo.toString().trim();
-            
-            // เช็กว่ามีวงเล็บต่อท้ายหรือไม่ เช่น "27 (1-37)" หรือ "2(3-1)"
-            // ถ้าเจอ ให้ดึงเอาเฉพาะข้อความก่อนหน้าวงเล็บ
-            const matchWithParentheses = trimmed.match(/^([^(]+)\s*\([^)]*\)/);
-            
-            if (matchWithParentheses) {
-                // ดึงเฉพาะเลขหน้าวงเล็บ + ตัด space หัวท้ายออก (เช่น "27 (1-37)" -> "27")
-                return matchWithParentheses[1].trim();
-            }
-            
-            // ถ้าไม่มีวงเล็บ (เช่น "2 มินิบัส") ให้คืนค่าข้อความเต็มเดิม
-            return trimmed;
         }
 
         function renderOperatorLogos(operatorType) {
