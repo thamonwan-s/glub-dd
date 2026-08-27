@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="#">
+    <link rel="icon" href="data:,">
     <title>ระบบเช็กตารางเวลารถเมล์</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,7 +414,6 @@
                 for (let i = 0; i < rawRows.length; i++) {
                     const row = rawRows[i];
                     
-                    // อ่านค่าแต่ละคอลัมน์ A - G
                     const getVal = (idx) => (row.c && row.c[idx] && row.c[idx].v !== null) ? String(row.c[idx].v).trim() : '';
 
                     const valA = getVal(0); // สายรถ
@@ -430,7 +429,6 @@
                     // ถ้าเจอค่าใน A แสดงว่าเป็น "รถเมล์สายใหม่"
                     if (valA !== '') {
                         if (currentRoute) busRoutes.push(currentRoute);
-                        // ตรวจสอบเงื่อนไข: ถ้า D1 เป็นช่องว่าง ให้ดึงข้อความจาก C1 ไว้ใน noScheduleText
                         const hasNoSchedule = (valD === '');
 
                         currentRoute = {
@@ -480,7 +478,7 @@
             }
 
             // ----------------------------------------------------
-            // เรียงลำดับข้อมูลตามตัวอักษร/ตัวเลขของ busNo 
+            // เรียงลำดับข้อมูลตามตัวอักษร/ตัวเลขของ busNo
             // ----------------------------------------------------
             globalBusData.sort((a, b) => {
                 return a.busNo.localeCompare(b.busNo, 'th', { numeric: true, sensitivity: 'base' });
@@ -493,7 +491,6 @@
                 const titleText = `${item.busNo}`.trim();
                 
                 // ดึงข้อมูลป้ายแรกมาโชว์ตัวอย่างในหน้าหลัก
-                const firstStop = item.stops[0] || { stopName: 'ไม่ระบุป้าย', weekdayTime: '-' };
                 const subtitleHtml = `${item.routeName}`;
                 const safeBusNo = String(item.busNo).replace(/'/g, "\\'");
 
