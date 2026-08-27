@@ -492,6 +492,12 @@
                 const subtitleHtml = `${item.routeName}`;
                 const safeBusNo = encodeURIComponent(item.busNo);
 
+                // 1. ตรวจสอบประเภทผู้ให้บริการ
+                const operatorType = getBusOperatorType(item.busNo, allSheetsData);
+                
+                // 2. สร้าง HTML โลโก้
+                const logoHtml = renderOperatorLogos(operatorType);
+
                 html += `
                 <div class="list-item" onclick="showDetailView('${safeBusNo}')">
                     <div class="item-left">
@@ -502,7 +508,8 @@
                         </div>
                     </div>
                     <div class="item-right">
-                        <button class="badge" onclick="event.stopPropagation(); showDetailView('${safeBusNo}')">More</button>
+                        <!-- แสดงโลโก้แทนปุ่ม More -->
+                        ${logoHtml}
                         <span class="arrow">›</span>
                     </div>
                 </div>
@@ -510,6 +517,72 @@
             });
 
             container.innerHTML = html;
+        }
+
+        // ฟังก์ชันแยกชื่อชีทตามตัวเลขสายรถ
+        function getSheetNameByBusNo(busNo) {
+            // ดึงเฉพาะตัวเลขที่อยู่หน้าช่องว่างแรก เช่น "2 (3-1)" -> "2"
+            const firstNumberMatch = String(busNo).trim().match(/^(\d+)/);
+            if (!firstNumberMatch) return null;
+        
+            const num = parseInt(firstNumberMatch[1], 10);
+        
+            if (num <= 50) return "สาย 1-50";
+            if (num > 50 && num <= 100) return "สาย 51-98";
+            if (num > 100 && num <= 150) return "สาย 101-150";
+            if (num > 150 && num <= 250) return "สาย 152-210";
+            if (num > 250 && num <= 600) return "สาย 501-559";
+            return null;
+        }
+        
+        // ฟังก์ชันค้นหาประเภทผู้ให้บริการจากข้อมูลชีทที่เกี่ยวข้อง
+        function getBusOperatorType(busNo, allSheetsData) {
+            const targetSheetName = getSheetNameByBusNo(busNo);
+            if (!targetSheetName || !allSheetsData[targetSheetName]) return "n/a";
+        
+            const rows = allSheetsData[targetSheetName]; // แถวข้อมูลในชีทนั้นๆ
+            const cleanBusNo = String(busNo).trim();
+        
+            // ค้นหาแถวที่คอลัมน์ A มีชื่อสายทั้งคำอยู่ในเซลล์
+            const matchedRow = rows.find(row => {
+                const cellA = String(row[0] || '').trim(); // คอลัมน์ A (index 0)
+                return cellA.includes(cleanBusNo);
+            });
+        
+            if (!matchedRow) return "n/a";
+        
+            // คอลัมน์ N คือ index 13
+            const cellN = String(matchedRow[13] || '').trim();
+            const hasTSB = cellN.includes("ไทยสมายล์บัส");
+            const hasBMTA = cellN.includes("ขสมก");
+        
+            if (hasTSB && hasBMTA) return "both";
+            if (hasTSB) return "tsb";
+            if (hasBMTA) return "bmta";
+            return "n/a";
+        }
+
+        function renderOperatorLogos(operatorType) {
+            // Styling ให้ขนาดเท่ากัน สมดุล จัดเรียงแนวนอน
+            const imgStyle = 'height: 24px; width: auto; max-width: 40px; object-fit: contain; vertical-align: middle;';
+            const containerStyle = 'display: inline-flex; align-items: center; gap: 6px;';
+        
+            if (operatorType === 'tsb') {
+                return `<div style="${containerStyle}"><img src="${LOGO_CONFIG.TSB}" alt="TSB" style="${imgStyle}"></div>`;
+            }
+            if (operatorType === 'bmta') {
+                return `<div style="${containerStyle}"><img src="${LOGO_CONFIG.BMTA}" alt="BMTA" style="${imgStyle}"></div>`;
+            }
+            if (operatorType === 'both') {
+                return `
+                    <div style="${containerStyle}">
+                        <img src="${LOGO_CONFIG.BMTA}" alt="BMTA" style="${imgStyle}">
+                        <img src="${LOGO_CONFIG.TSB}" alt="TSB" style="${imgStyle}">
+                    </div>
+                `;
+            }
+            // กรณี n/a ไม่ต้องแสดงอะไร
+            return '';
         }
 
         // ==========================================
