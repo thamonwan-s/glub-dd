@@ -401,10 +401,11 @@
                 await initApp();
             } catch (error) {
                 console.error("เกิดข้อผิดพลาดขณะโหลดแอป:", error);
-                setLoadingText("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-            } finally {
-                // ปิดหน้า Loading
-                hideLoading();
+        
+                // เช็คความปลอดภัยกรณี loading.js โหลดไม่สำเร็จ
+                if (typeof setLoadingText === 'function') {
+                    setLoadingText("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+                }
             }
         });
         
@@ -560,7 +561,7 @@
         // ==========================================
         async function initApp() {
             globalBusData = await getGoogleSheetData(SPREADSHEET_ID);
-            document.getElementById('loading-screen').style.display = 'none';
+            hideLoading();
 
             if (globalBusData.length === 0) {
                 document.getElementById('loading-screen').innerText = 'ไม่พบข้อมูล หรือเปิดสิทธิ์ชีทไม่ถูกต้อง';
