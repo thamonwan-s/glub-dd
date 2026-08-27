@@ -160,7 +160,7 @@
 
 /* สไลด์ป้ายเข้ามาหยุดจอดข้างรถ */
 .bus-stop-minimal.arrived {
-  transform: translateX(-95px);
+  transform: translateX(-120px);
 }
 
 .stop-sign {
