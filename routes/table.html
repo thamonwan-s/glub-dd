@@ -392,9 +392,17 @@
         // 2. ระบบดึงข้อมูล Google Sheet
         // ==========================================
         const SPREADSHEET_ID = '151hB3s9N7M63IK8guYJslvORuDQIp9W2eunkv_HUBN0'; // ใส่ ID ชีทของคุณที่นี่
-        const SHEET_NAME = 'รถบริการตลอดคืน 🌙'; // ใส่ชื่อแท็บภาษาไทยหรืออังกฤษตรงตามในชีท
 
-        async function getGoogleSheetData(sheetId, sheetName = '') {
+        // ฟังก์ชันช่วยตัดอีโมจิและช่องว่าง ออกจาก busNo เพื่อเอาไว้เปรียบเทียบ
+        function cleanBusNoKey(busNo) {
+            if (!busNo) return '';
+            // ลบ Emoji และตัดช่องว่างหน้า-หลัง
+            return String(busNo)
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+                .trim();
+        }
+
+        async function getGoogleSheetData(sheetId, sheetName = 'รถบริการตลอดคืน 🌙') {
             let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
             if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
 
@@ -409,64 +417,133 @@
 
                 const rawRows = data.table.rows;
                 const busRoutes = [];
-                let currentRoute = null;
 
-                for (let i = 0; i < rawRows.length; i++) {
-                    const row = rawRows[i];
-                    
-                    const getVal = (idx) => (row.c && row.c[idx] && row.c[idx].v !== null) ? String(row.c[idx].v).trim() : '';
+                // ----------------------------------------------------
+                // กรณีที่ 1 รถบริการตลอดคืน
+                // ----------------------------------------------------
+                if (sheetName === 'รถบริการตลอดคืน 🌙') {
+                    let currentRoute = null;
+    
+                    for (let i = 0; i < rawRows.length; i++) {
+                        const row = rawRows[i];
+                        if (!row || !row.c) continue;
+                        
+                        const getVal = (idx) => (row.c && row.c[idx] && row.c[idx].v !== null) ? String(row.c[idx].v).trim() : '';
+    
+                        const valA = getVal(0); // สายรถ
+                        const valB = getVal(1); // ชื่อเส้นทาง
+                        const valC = getVal(2); // ป้าย
+                        const valD = getVal(3); // เวลา วันธรรมดา
+                        const valE = getVal(4); // เวลา เสาร์-อาทิตย์
+                        const valF = getVal(5); // เวลา เสาร์-อาทิตย์ (เพิ่มเติม)
+                        const valG = getVal(6); // วันอัปเดตล่าสุด
+    
+                        if (valA === '' && valD === '' && valC === '') break;
+    
+                        // ถ้าเจอค่าใน A แสดงว่าเป็น "รถเมล์สายใหม่"
+                        if (valA !== '') {
+                            if (currentRoute) busRoutes.push(currentRoute);
+                            currentRoute = {
+                                busNo: valA,
+                                routeName: valB,
+                                lastUpdated: valG || '',
+                                noScheduleText: (valC && valD === '') ? valC : '', // เก็บข้อความแจ้งเตือนเฉพาะเมื่อมีข้อความใน C แต่ไม่มีเวลาใน D
+                                stops: []
+                            };
+                        }
+    
+                        // หากคอลัมน์ C มีชื่อป้าย ให้นับเป็นข้อมูลป้ายของสายนั้นๆ
+                        if (currentRoute && (valD !== '' || valE !== '' || valF !== '')) {
+                            currentRoute.stops.push({
+                                stopName: valC,
+                                weekdayTime: valD,
+                                weekendTime: valE || valF || 'ไม่มีข้อมูล'
+                            });
+    
+                            // ถ้ามีวันที่อัปเดตบรรทัดไหน ให้เก็บอัปเดตล่าสุดไว้
+                            if (valG) currentRoute.lastUpdated = valG;
+                        }
+                    }
+    
+                    // ดันชุดข้อมูลสายสุดท้ายเข้า Array
+                    if (currentRoute) busRoutes.push(currentRoute);
+                    return busRoutes;
+            }
 
-                    const valA = getVal(0); // สายรถ
-                    const valB = getVal(1); // ชื่อเส้นทาง
-                    const valC = getVal(2); // ป้าย
-                    const valD = getVal(3); // เวลา วันธรรมดา
-                    const valE = getVal(4); // เวลา เสาร์-อาทิตย์
-                    const valF = getVal(5); // เวลา เสาร์-อาทิตย์ (เพิ่มเติม)
-                    const valG = getVal(6); // วันอัปเดตล่าสุด
-
-                    if (valA === '' && valD === '' && valC === '') break;
-
-                    // ถ้าเจอค่าใน A แสดงว่าเป็น "รถเมล์สายใหม่"
-                    if (valA !== '') {
-                        if (currentRoute) busRoutes.push(currentRoute);
-                        currentRoute = {
+            // ----------------------------------------------------
+            // กรณีที่ 2: ชีทสาย
+            // ----------------------------------------------------         
+            for (let i = 0; i < rawRows.length; i++) {
+                const row = rawRows[i];
+                if (!row || !row.c) continue;
+                
+                const getVal = (idx) => (row.c && row.c[idx] && row.c[idx].v !== null) ? String(row.c[idx].v).trim() : '';
+    
+                const rawValA = getVal(0); // สายรถแบบเดิม (มี/ไม่มี emoji)
+                if (rawValA === '') continue;
+    
+                const cleanKey = cleanBusNoKey(rawValA); // ตัดอีโมจิเอาไว้เปรียบเทียบ
+                const valB = getVal(1); // ชื่อเส้นทาง
+                const valC = getVal(2); // วันธรรมดา คันแรกต้นทาง
+                const valD = getVal(3); // วันธรรมดา คันแรกปลายทาง
+                const valE = getVal(4); // วันธรรมดา สุดท้ายต้นทาง
+                const valF = getVal(5); // วันธรรมดา สุดท้ายปลายทาง
+                const valG = getVal(6); // วันหยุด คันแรกต้นทาง
+                const valH = getVal(7); // วันหยุด คันแรกปลายทาง
+                const valI = getVal(8); // วันหยุด สุดท้ายต้นทาง
+                const valJ = getVal(9); // วันหยุด สุดท้ายปลายทาง
+                const valK = getVal(10); // อัปเดตล่าสุด
+                const valN = getVal(13); // ผู้ให้บริการ
+    
+                // ตรวจสอบว่าเคยบันทึก busNo นี้ (เมื่อตัด emoji ออกแล้ว) ไว้หรือยัง
+                const existingRoute = busRoutes.find(r => cleanBusNoKey(r.busNo) === cleanKey);
+    
+                if (existingRoute) {
+                    // 🌟 หากมี busNo นี้อยู่แล้ว เติมเฉพาะตัวแปรที่ยังไม่มีค่า (ค่าเดิมเป็นสตริงว่าง '')
+                    if (!existingRoute.routeName && valB) existingRoute.routeName = valB;
+                    if (!existingRoute.lastUpdated && valK) existingRoute.lastUpdated = valK;
+                    if (!existingRoute.d_dep1 && valC) existingRoute.d_dep1 = valC;
+                    if (!existingRoute.d_arr1 && valD) existingRoute.d_arr1 = valD;
+                    if (!existingRoute.d_dep2 && valE) existingRoute.d_dep2 = valE;
+                    if (!existingRoute.d_arr2 && valF) existingRoute.d_arr2 = valF;
+                    if (!existingRoute.w_dep1 && valG) existingRoute.w_dep1 = valG;
+                    if (!existingRoute.w_arr1 && valH) existingRoute.w_arr1 = valH;
+                    if (!existingRoute.w_dep2 && valI) existingRoute.w_dep2 = valI;
+                    if (!existingRoute.w_arr2 && valJ) existingRoute.w_arr2 = valJ;
+                    if (!existingRoute.owner && valN) existingRoute.owner = valN;
+                } else {
+                    // 🌟 หากยังไม่เคยมี busNo นี้เลย ให้สร้าง Object เพิ่มเข้าไปทั้งหมด
+                    busRoutes.push({
                         busNo: valA,
                         routeName: valB,
-                        lastUpdated: valG || '',
-                        noScheduleText: (valC && valD === '') ? valC : '', // เก็บข้อความแจ้งเตือนเฉพาะเมื่อมีข้อความใน C แต่ไม่มีเวลาใน D
+                        lastUpdated: valK || '',
+                        d_dep1: valC,
+                        d_arr1: valD,
+                        d_dep2: valE,
+                        d_arr2: valF,
+                        w_dep1: valG,
+                        w_arr1: valH,
+                        w_dep2: valI,
+                        w_arr2: valJ,
+                        owner: valN,
                         stops: []
-                    };
-                    }
-
-                    // หากคอลัมน์ C มีชื่อป้าย ให้นับเป็นข้อมูลป้ายของสายนั้นๆ
-                    if (valD !== '' || valE !== '' || valF !== '') {
-                        currentRoute.stops.push({
-                            stopName: valC,
-                            weekdayTime: valD,
-                            weekendTime: valE || valF || 'ไม่มีข้อมูล'
-                        });
-
-                        // ถ้ามีวันที่อัปเดตบรรทัดไหน ให้เก็บอัปเดตล่าสุดไว้
-                        if (valG) currentRoute.lastUpdated = valG;
-                    }
+                    });
                 }
-
-                // ดันชุดข้อมูลสายสุดท้ายเข้า Array
-                if (currentRoute) busRoutes.push(currentRoute);
-
-                return busRoutes;
-
-            } catch (e) {
-                console.error("Fetch Sheet Error:", e);
-                return [];
             }
+
+            return busRoutes;
+    
+        } catch (e) {
+            console.error("Fetch Sheet Error:", e);
+            return [];
         }
+    }
 
         // ==========================================
         // 3. Render หน้าหลัก (List View)
         // ==========================================
         async function initApp() {
-            globalBusData = await getGoogleSheetData(SPREADSHEET_ID, SHEET_NAME);
+            globalBusData = await getGoogleSheetData(SPREADSHEET_ID);
             document.getElementById('loading').style.display = 'none';
 
             if (globalBusData.length === 0) {
@@ -477,6 +554,11 @@
             // 2. ดึงข้อมูลจากชีทย่อยทั้งหมดมาเก็บไว้ใน allSheetsData เพื่อเอาไว้เช็กคอลัมน์ A และ N
             const sheetNames = ["สาย 1-50", "สาย 51-98", "สาย 101-150", "สาย 152-210", "สาย 501-559"];
             const allSheetsData = {};
+
+            for (const sName of sheetNames) {
+                // ส่งชื่อชีทแต่ละอันเข้าไปอย่างถูกต้อง
+                allSheetsData[sName] = await getGoogleSheetData(SPREADSHEET_ID, sName);
+            }
 
             // ดึงข้อมูลแต่ละชีทพร้อมกันแบบ Parallel เพื่อความเร็ว
             await Promise.all(sheetNames.map(async (sName) => {
