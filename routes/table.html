@@ -986,26 +986,6 @@
                 `;
             }
             return '';
-                }
-            
-                // 2. นำชื่อไฟล์จริงที่แมตช์เจอมาแปลงเป็น URL
-                const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
-                console.log("--> [renderRouteImage] 🟢 พบรูปภาพ BMTA:", bmtaImageUrl);
-                
-                return `
-                    <div class="route-img-container" style="width: 100%; max-width: 500px; margin: 16px auto; text-align: center;">
-                        <img src="${bmtaImageUrl}" style="
-                            width: 100%;
-                            height: auto;
-                            border-radius: 12px;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        " alt="รายละเอียดสาย ${busNo}" 
-                        onerror="this.parentElement.style.display='none';">
-                    </div>
-                `;
-            }
-        
-            return '';
         }
 
         initApp();
