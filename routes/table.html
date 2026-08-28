@@ -900,8 +900,8 @@
                 return `
                     <div class="route-img-container" style="
                         width: 100%;
-                        max-width: 360px;
-                        height: 260px; 
+                        max-width: 480px;
+                        height: 300px; 
                         overflow: hidden;
                         position: relative;
                         border-radius: 12px;
@@ -911,11 +911,11 @@
                         <img src="${tsbImageUrl}" 
                              referrerpolicy="no-referrer"
                              style="
-                                 width: 100%;
-                                 height: 100%;
-                                 object-fit: cover;
-                                 object-position: 5% 92%;  /* โฟกัสไปที่มุมซ้ายล่าง (ตารางราคา) */
-                                 transform: scale(1.85);   /* ซูมขยายเฉพาะส่วนตาราง */
+                                 width: 185%;             /* ขยายภาพให้ใหญ่เพื่อตัดฝั่งขวาทิ้ง */
+                                 height: auto;
+                                 position: absolute;
+                                 left: -4%;               /* ดึงภาพไปทางซ้ายเพื่อเก็บตารางให้ครบ */
+                                 bottom: -4%;             /* ดันภาพลงล่างเพื่อซ่อนแถบสีน้ำเงิน */
                              " 
                              alt="ตารางค่าโดยสารสาย ${busNo}" 
                              onerror="this.parentElement.style.display='none';">
