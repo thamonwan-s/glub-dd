@@ -890,9 +890,10 @@
         // 2. ฟังก์ชันดึงรายชื่อรูปภาพจากหน้าเว็บ ขสมก.
         async function loadBmtaImageList() {
             try {
-                const targetUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.bmta.co.th/th/bus-lines'); 
+                const targetUrl = 'https://api.allorigins.win/get?url=${encodeURIComponent('https://www.bmta.co.th/th/bus-lines')}`; 
                 const response = await fetch(targetUrl);
-                const htmlText = await response.text();
+                const data = await response.json();
+                const htmlText = data.contents;
     
                 const regex = /images\/car-routes\/([^"'\s>]+\.(?:png|jpg|jpeg))/gi;
                 const matches = [];
