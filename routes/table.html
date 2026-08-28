@@ -835,7 +835,9 @@
             });
             }
 
-            const routeImageHtml = renderRouteImage(data.busNo, operatorType);
+            const routeImageHtml = typeof renderRouteImage === 'function' 
+                ? renderRouteImage(data.busNo, operatorType) 
+                : '';
 
             contentDiv.innerHTML = `
                 <div class="route-header">
