@@ -790,6 +790,16 @@
                 });
             }
 
+            // ให้แกะค่ายจาก logoHtml แล้วอัปเดตกลับเข้า operatorType ทันที!
+            if (operatorType === 'n/a' && logoHtml) {
+                const logoStr = String(logoHtml).toLowerCase();
+                if (logoStr.includes('tsb') || logoStr.includes('ไทยสมายล์') || logoStr.includes('smile')) {
+                    operatorType = 'tsb';
+                } else if (logoStr.includes('bmta') || logoStr.includes('ขสมก')) {
+                    operatorType = 'bmta';
+                }
+            }
+
             const contentDiv = document.getElementById('detailContent');
             const formattedDate = data.lastUpdated ? formatDateString(data.lastUpdated) : 'n/a';
             
@@ -878,8 +888,9 @@
         
             // 1. สกัดเอาเฉพาะเลขสายในวงเล็บ เช่น "2 (3-1)" -> "3-1"
             const match = String(busNo).match(/\(([^)]+)\)/);
-            const subRoute = match ? match[1].trim() : String(busNo).trim();
-            console.log("--> [renderRouteImage] subRoute ที่สกัดได้:", subRoute);
+            const mainRoute = match && match[1] ? match[1].trim() : '';
+            const subRoute = match && match[2] ? match[2].trim() : mainRoute;
+            console.log("--> [renderRouteImage] mainRoute:", mainRoute, "| subRoute:", subRoute);
         
             // 🌟 กรณีเป็น Thai Smile Bus (TSB) -> ใช้โครงสร้างซูม+ครอปเฉพาะส่วนล่าง
             if (operatorType === 'tsb' && subRoute) {
