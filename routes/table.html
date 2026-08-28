@@ -890,7 +890,7 @@
         // 2. ฟังก์ชันดึงรายชื่อรูปภาพจากหน้าเว็บ ขสมก.
         async function loadBmtaImageList() {
             try {
-                const targetUrl = 'https://api.allorigins.win/get?url=${encodeURIComponent('https://www.bmta.co.th/th/bus-lines')}`; 
+                const targetUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://www.bmta.co.th/th/bus-lines')}`; 
                 const response = await fetch(targetUrl);
                 const data = await response.json();
                 const htmlText = data.contents;
