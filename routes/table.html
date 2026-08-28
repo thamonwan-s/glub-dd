@@ -835,6 +835,7 @@
             });
             }
 
+            console.log("--> [DetailView] กำลังจะเรียก renderRouteImage...");
             const routeImageHtml = typeof renderRouteImage === 'function' 
                 ? renderRouteImage(data.busNo, operatorType) 
                 : '';
