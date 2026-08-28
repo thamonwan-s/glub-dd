@@ -945,10 +945,22 @@
         
             // 🌟 กรณีเป็น ขสมก (BMTA) -> แสดงรูปเต็มใบปกติ
             if (operatorType === 'bmta' && subRoute) {
-                // สร้าง URL ของ ขสมก (ต้องปรับตามรูปแบบชื่อไฟล์จริงของ ขสมก)
-                const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(subRoute)}.png`;
-                console.log("--> [renderRouteImage] สร้าง URL ของ BMTA:", bmtaImageUrl);
-        
+                const targetPattern = `สาย ${subRoute}`; // จะได้ "สาย 3-18"
+    
+                // 1. วนลูปหาชื่อไฟล์ที่มีคำว่า "สาย 3-18" อยู่ข้างใน (เช่น "20254011-สาย 3-18-1 8.png")
+                const matchedFileName = (typeof bmtaImageList !== 'undefined' && Array.isArray(bmtaImageList))
+                    ? bmtaImageList.find(file => String(file).includes(targetPattern))
+                    : null;
+            
+                if (!matchedFileName) {
+                    console.warn(`--> [BMTA] ❌ ไม่พบรูปภาพที่มีคำว่า '${targetPattern}' ในโฟลเดอร์`);
+                    return '';
+                }
+            
+                // 2. นำชื่อไฟล์จริงที่แมตช์เจอมาแปลงเป็น URL
+                const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
+                console.log("--> [renderRouteImage] 🟢 พบรูปภาพ BMTA:", bmtaImageUrl);
+                
                 return `
                     <div class="route-img-container" style="width: 100%; max-width: 500px; margin: 16px auto; text-align: center;">
                         <img src="${bmtaImageUrl}" style="
