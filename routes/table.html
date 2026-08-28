@@ -884,6 +884,34 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // 1. ประกาศตัวแปร Global ไว้บนสุด
+        let bmtaImageList = [];
+    
+        // 2. ฟังก์ชันดึงรายชื่อรูปภาพจากหน้าเว็บ ขสมก.
+        async function loadBmtaImageList() {
+            try {
+                const targetUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.bmta.co.th/th/bus-lines'); 
+                const response = await fetch(targetUrl);
+                const htmlText = await response.text();
+    
+                const regex = /images\/car-routes\/([^"'\s>]+\.(?:png|jpg|jpeg))/gi;
+                const matches = [];
+                let match;
+    
+                while ((match = regex.exec(htmlText)) !== null) {
+                    matches.push(decodeURIComponent(match[1]));
+                }
+    
+                bmtaImageList = [...new Set(matches)];
+                console.log("--> [BMTA] 🟢 โหลดรายการรูปสำเร็จ:", bmtaImageList.length, "รายการ");
+            } catch (error) {
+                console.error("--> [BMTA] ❌ ดึงรายการรูปไม่สำเร็จ:", error);
+            }
+        }
+    
+        // 🌟 3. สั่งให้ทำงานทันทีเมื่อเปิดหน้าเว็บ
+        loadBmtaImageList();
+
         function renderRouteImage(busNo, operatorType) {
         
             if (!busNo) return '';
@@ -945,17 +973,19 @@
         
             // 🌟 กรณีเป็น ขสมก (BMTA) -> แสดงรูปเต็มใบปกติ
             if (operatorType === 'bmta' && subRoute) {
-                const targetPattern = `สาย ${subRoute}`; // จะได้ "สาย 3-18"
+                const targetPattern = `สาย ${subRoute}`;
+                const matchedFileName = bmtaImageList.find(file => String(file).includes(targetPattern));
+                
+                if (!matchedFileName) return '';
     
-                // 1. วนลูปหาชื่อไฟล์ที่มีคำว่า "สาย 3-18" อยู่ข้างใน (เช่น "20254011-สาย 3-18-1 8.png")
-                const matchedFileName = (typeof bmtaImageList !== 'undefined' && Array.isArray(bmtaImageList))
-                    ? bmtaImageList.find(file => String(file).includes(targetPattern))
-                    : null;
-            
-                if (!matchedFileName) {
-                    console.log("--> [bmtaImageList]:", bmtaImageList);
-                    console.warn(`--> [BMTA] ❌ ไม่พบรูปภาพที่มีคำว่า '${targetPattern}' ในโฟลเดอร์`);
-                    return '';
+                const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
+                return `
+                    <div class="route-img-container" style="width: 100%; max-width: 500px; margin: 16px auto; text-align: center;">
+                        <img src="${bmtaImageUrl}" style="width: 100%; height: auto; border-radius: 12px;" onerror="this.parentElement.style.display='none';">
+                    </div>
+                `;
+            }
+            return '';
                 }
             
                 // 2. นำชื่อไฟล์จริงที่แมตช์เจอมาแปลงเป็น URL
