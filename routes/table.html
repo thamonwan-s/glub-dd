@@ -877,10 +877,12 @@
             // 1. สกัดเอาเฉพาะเลขสายในวงเล็บ เช่น "2 (3-1)" -> "3-1"
             const match = String(busNo).match(/\(([^)]+)\)/);
             const subRoute = match ? match[1].trim() : String(busNo).trim();
+            console.log("--> [renderRouteImage] subRoute ที่สกัดได้:", subRoute);
         
             // 🌟 กรณีเป็น Thai Smile Bus (TSB) -> ใช้โครงสร้างซูม+ครอปเฉพาะส่วนล่าง
             if (operatorType === 'tsb' && subRoute) {
                 const tsbImageUrl = `https://intranet.thaismilebus.com/RouteWebview/image/${subRoute}(2).jpg`;
+                console.log("--> [renderRouteImage] สร้าง URL ของ TSB:", tsbImageUrl);
         
                 return `
                     <div class="route-img-container" style="
@@ -911,6 +913,7 @@
             if (operatorType === 'bmta' && subRoute) {
                 // สร้าง URL ของ ขสมก (ต้องปรับตามรูปแบบชื่อไฟล์จริงของ ขสมก)
                 const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(subRoute)}.png`;
+                console.log("--> [renderRouteImage] สร้าง URL ของ BMTA:", bmtaImageUrl);
         
                 return `
                     <div class="route-img-container" style="width: 100%; max-width: 500px; margin: 16px auto; text-align: center;">
