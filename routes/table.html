@@ -790,9 +790,6 @@
                 });
             }
 
-            console.log("--> [DetailView] busNo:", data.busNo);
-            console.log("--> [DetailView] operatorType ที่ได้:", operatorType);
-
             const contentDiv = document.getElementById('detailContent');
             const formattedDate = data.lastUpdated ? formatDateString(data.lastUpdated) : 'n/a';
             
@@ -879,7 +876,7 @@
         
             // 1. สกัดเอาเฉพาะเลขสายในวงเล็บ เช่น "2 (3-1)" -> "3-1"
             const match = String(busNo).match(/\(([^)]+)\)/);
-            const subRoute = match ? match[1].trim() : '';
+            const subRoute = match ? match[1].trim() : String(busNo).trim();
         
             // 🌟 กรณีเป็น Thai Smile Bus (TSB) -> ใช้โครงสร้างซูม+ครอปเฉพาะส่วนล่าง
             if (operatorType === 'tsb' && subRoute) {
