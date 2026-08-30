@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="../loading.css">
     <script src="config.js"></script>
     <script src="../loading.js"></script>
+    <script src="bmta.js"></script>
+    <script src="bus-logo.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -323,6 +325,40 @@
         .icon-svg {
             stroke: var(--icon-color);
             flex-shrink: 0;
+        }
+        .detail-schedule-card {
+            position: relative;
+            width: 100%;             /* ขนาดเท่ากับกรอบด้านบน */
+            box-sizing: border-box;
+            background: #ffffff;     /* ปรับตามธีม (เช่น Dark Mode ใช้ #1e1e1e) */
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 📌 หัวกรอบภาพ (Header Zone) */
+        .schedule-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        /* กรอบคุมขนาดโลโก้ที่มุมซ้ายบน */
+        .schedule-logo-badge {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+        
+        /* รูปตารางเดินรถด้านในกรอบ */
+        .schedule-image-content {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -750,6 +786,7 @@
             // กรณี n/a ไม่ต้องแสดงอะไร
             return '';
         }
+        
 
         // index ในที่นี้คือ busNo ที่ส่งเข้ามาค้นหา
         function showDetailView(index) {
@@ -912,80 +949,107 @@
     
         // 🌟 3. สั่งให้ทำงานทันทีเมื่อเปิดหน้าเว็บ
         loadBmtaImageList();
-
         function renderRouteImage(busNo, operatorType) {
-        
             if (!busNo) return '';
-
+        
             // 1. แปลงเป็นข้อความ และตัดช่องว่างหัว-ท้ายออก
             const cleanBusNo = String(busNo).trim();
         
             let mainRoute = '';
             let subRoute = '';
         
-            // 🌟 Regex ใหม่: เจาะจงหาตัวในวงเล็บโดยเฉพาะ
+            // Regex หาตัวในวงเล็บ
             const bracketMatch = cleanBusNo.match(/\(([^)]+)\)/);
         
             if (bracketMatch) {
-                // กรณีมีวงเล็บ เช่น "2 (3-1)" หรือ "สาย 2 (3-1)"
-                subRoute = bracketMatch[1].trim(); // ดึงเฉพาะค่าในวงเล็บ เช่น "3-1"
-                
-                // ตัดส่วนวงเล็บและคำว่า "สาย" ออก เอาเฉพาะเลขสายหลักด้านหน้า
+                subRoute = bracketMatch[1].trim();
                 mainRoute = cleanBusNo
-                    .replace(/\([^)]*\)/, '')   // ลบส่วน (3-1) ออก
-                    .replace(/^สาย\s*/, '')     // ลบคำว่า "สาย" ออก
-                    .trim();                    // ได้ "2"
+                    .replace(/\([^)]*\)/, '')
+                    .replace(/^สาย\s*/, '')
+                    .trim();
             } else {
-                // กรณีไม่มีวงเล็บ เช่น "4-36"
                 mainRoute = cleanBusNo.replace(/^สาย\s*/, '').trim();
                 subRoute = mainRoute;
             }
-            console.log("--> [renderRouteImage] mainRoute:", mainRoute, "| subRoute:", subRoute);
         
-            // 🌟 กรณีเป็น Thai Smile Bus (TSB) -> ใช้โครงสร้างซูม+ครอปเฉพาะส่วนล่าง
+            let logoHtml = '';
+        
+            // 🔷 1. กรณี Thai Smile Bus (TSB) -> ดึงโลโก้สีน้ำเงิน 'T'
             if (operatorType === 'tsb' && subRoute) {
+                if (typeof renderBusLogo === 'function') {
+                    logoHtml = renderBusLogo('T');
+                }
+        
                 const tsbImageUrl = `https://intranet.thaismilebus.com/RouteWebview/image/${subRoute}(${mainRoute}).jpg`;
-                console.log("--> [renderRouteImage] สร้าง URL ของ TSB:", tsbImageUrl);
         
                 return `
-                    <div class="route-img-container" style="
-                        width: 100%;
-                        max-width: 480px;
-                        aspect-ratio: 48 / 37;
-                        overflow: hidden;
-                        position: relative;
-                        border-radius: 12px;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        margin: 16px auto;
-                    ">
-                        <img src="${tsbImageUrl}" 
-                             referrerpolicy="no-referrer"
-                             style="
-                                 width: 158%;             /* ขยายภาพให้ใหญ่เพื่อตัดฝั่งขวาทิ้ง */
-                                 height: auto;
-                                 position: absolute;
-                                 bottom: -25%;             /* ดันภาพลงล่างเพื่อซ่อนแถบสีน้ำเงิน */
-                             " 
-                             alt="ตารางค่าโดยสารสาย ${busNo}" 
-                             onerror="this.parentElement.style.display='none';">
+                    <div class="stop-card" style="margin-top: 16px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+                            <div style="width: 32px; height: 32px; flex-shrink: 0;">${logoHtml}</div>
+                            <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางเดินรถ / ค่าโดยสาร</span>
+                        </div>
+                        <div class="route-img-container" style="
+                            width: 100%;
+                            aspect-ratio: 48 / 37;
+                            overflow: hidden;
+                            position: relative;
+                            border-radius: 8px;
+                        ">
+                            <img src="${tsbImageUrl}" 
+                                 referrerpolicy="no-referrer"
+                                 style="
+                                     width: 158%;
+                                     height: auto;
+                                     position: absolute;
+                                     bottom: -25%;
+                                 " 
+                                 alt="ตารางค่าโดยสารสาย ${busNo}" 
+                                 onerror="this.closest('.stop-card').style.display='none';">
+                        </div>
                     </div>
                 `;
             }
         
-            // 🌟 กรณีเป็น ขสมก (BMTA) -> แสดงรูปเต็มใบปกติ
+            // 🔴 2. กรณี ขสมก (BMTA) -> ตรวจสอบรูปใน bmta.js เพื่อดึงโลโก้ตามประเภทสีรถ
             if (operatorType === 'bmta' && subRoute) {
                 const targetPattern = `สาย ${subRoute}`;
-                const matchedFileName = bmtaImageList.find(file => String(file).includes(targetPattern));
-                
+                const matchedFileName = (typeof bmtaImageList !== 'undefined') 
+                    ? bmtaImageList.find(file => String(file).includes(targetPattern))
+                    : null;
+        
                 if (!matchedFileName) return '';
-    
+        
+                // ดึงสีรถจาก bmta.js (ถ้ามี)
+                if (typeof bmtaImageMap !== 'undefined') {
+                    const routeData = bmtaImageMap[subRoute] || bmtaImageMap[cleanBusNo];
+                    if (routeData) {
+                        const foundType = Object.keys(routeData).find(key => {
+                            const val = routeData[key];
+                            return val && typeof val === 'string' && val.trim() !== "";
+                        });
+                        if (foundType && typeof renderBusLogo === 'function') {
+                            logoHtml = renderBusLogo(foundType);
+                        }
+                    }
+                }
+        
                 const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
+                
                 return `
-                    <div class="route-img-container" style="width: 100%; max-width: 500px; margin: 16px auto; text-align: center;">
-                        <img src="${bmtaImageUrl}" style="width: 100%; height: auto; border-radius: 12px;" onerror="this.parentElement.style.display='none';">
+                    <div class="stop-card" style="margin-top: 16px; padding: 16px;">
+                        ${logoHtml ? `
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+                                <div style="width: 32px; height: 32px; flex-shrink: 0;">${logoHtml}</div>
+                                <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางเดินรถ</span>
+                            </div>
+                        ` : ''}
+                        <div class="route-img-container" style="width: 100%; text-align: center;">
+                            <img src="${bmtaImageUrl}" style="width: 100%; height: auto; border-radius: 8px;" onerror="this.closest('.stop-card').style.display='none';">
+                        </div>
                     </div>
                 `;
             }
+        
             return '';
         }
 
