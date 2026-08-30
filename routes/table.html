@@ -1012,29 +1012,41 @@
         
             // 🔴 2. กรณี ขสมก (BMTA) -> ตรวจสอบรูปใน bmta.js เพื่อดึงโลโก้ตามประเภทสีรถ
             if (operatorType === 'bmta' && subRoute) {
-                const targetPattern = `สาย ${subRoute}`;
-                const matchedFileName = (typeof bmtaImageList !== 'undefined') 
-                    ? bmtaImageList.find(file => String(file).includes(targetPattern))
-                    : null;
+                let bmtaImageUrl = '';
         
-                if (!matchedFileName) return '';
-        
-                // ดึงสีรถจาก bmta.js (ถ้ามี)
                 if (typeof bmtaImageMap !== 'undefined') {
-                    const routeData = bmtaImageMap[subRoute] || bmtaImageMap[cleanBusNo];
+                    // 🎯 ประกอบ Key ให้ตรงกับโครงสร้างใน bmta.js แบบเป๊ะๆ
+                    const exactBmtaKey = `${mainRoute} (${subRoute})`;
+                    const routeData = bmtaImageMap[exactBmtaKey];
+        
                     if (routeData) {
+                        // ค้นหาประเภทรถที่มี URL รูปภาพ (ที่ไม่ใช่ค่าว่าง "")
                         const foundType = Object.keys(routeData).find(key => {
                             const val = routeData[key];
                             return val && typeof val === 'string' && val.trim() !== "";
                         });
-                        if (foundType && typeof renderBusLogo === 'function') {
-                            logoHtml = renderBusLogo(foundType);
+        
+                        if (foundType) {
+                            bmtaImageUrl = routeData[foundType]; // ดึง URL จาก bmta.js
+                            if (typeof renderBusLogo === 'function') {
+                                logoHtml = renderBusLogo(foundType); // ดึงโลโก้ประจำประเภทรถ (G, GE, O, N ฯลฯ)
+                            }
                         }
                     }
                 }
         
-                const bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
-                
+                // Fallback: หากหาใน bmtaImageMap ไม่เจอ ให้ลองดึงจาก bmtaImageList
+                if (!bmtaImageUrl && typeof bmtaImageList !== 'undefined' && Array.isArray(bmtaImageList)) {
+                    const targetPattern = `สาย ${subRoute}`;
+                    const matchedFileName = bmtaImageList.find(file => String(file).includes(targetPattern));
+                    if (matchedFileName) {
+                        bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
+                    }
+                }
+        
+                // หากไม่มี URL รูปภาพ ให้ซ่อนกรอบไป
+                if (!bmtaImageUrl) return '';
+        
                 return `
                     <div class="stop-card" style="margin-top: 16px; padding: 16px;">
                         ${logoHtml ? `
