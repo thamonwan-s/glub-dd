@@ -1056,7 +1056,11 @@
                             </div>
                         ` : ''}
                         <div class="route-img-container" style="width: 100%; text-align: center;">
-                            <img src="${bmtaImageUrl}" style="width: 100%; height: auto; border-radius: 8px;" onerror="this.closest('.stop-card').style.display='none';">
+                            <img src="${bmtaImageUrl}" 
+                                 crossorigin="anonymous" 
+                                 referrerpolicy="no-referrer"
+                                 style="width: 100%; height: auto; border-radius: 8px;" 
+                                 onerror="this.closest('.stop-card').style.display='none';">
                         </div>
                     </div>
                 `;
