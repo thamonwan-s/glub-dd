@@ -949,6 +949,7 @@
     
         // 🌟 3. สั่งให้ทำงานทันทีเมื่อเปิดหน้าเว็บ
         loadBmtaImageList();
+        
         function renderRouteImage(busNo, operatorType) {
             if (!busNo) return '';
         
@@ -1011,56 +1012,61 @@
             }
         
             // 🔴 2. กรณี ขสมก (BMTA) -> ตรวจสอบรูปใน bmta.js เพื่อดึงโลโก้ตามประเภทสีรถ
-            if (operatorType === 'bmta' && subRoute) {
-                let bmtaImageUrl = '';
-        
-                if (typeof bmtaImageMap !== 'undefined') {
-                    // 🎯 ประกอบ Key ให้ตรงกับโครงสร้างใน bmta.js แบบเป๊ะๆ
-                    const exactBmtaKey = `${mainRoute} (${subRoute})`;
-                    const routeData = bmtaImageMap[exactBmtaKey];
-        
-                    if (routeData) {
-                        // ค้นหาประเภทรถที่มี URL รูปภาพ (ที่ไม่ใช่ค่าว่าง "")
-                        const foundType = Object.keys(routeData).find(key => {
-                            const val = routeData[key];
-                            return val && typeof val === 'string' && val.trim() !== "";
-                        });
-        
-                        if (foundType) {
-                            bmtaImageUrl = routeData[foundType]; // ดึง URL จาก bmta.js
-                            if (typeof renderBusLogo === 'function') {
-                                logoHtml = renderBusLogo(foundType); // ดึงโลโก้ประจำประเภทรถ (G, GE, O, N ฯลฯ)
-                            }
-                        }
-                    }
-                }
-        
-                // Fallback: หากหาใน bmtaImageMap ไม่เจอ ให้ลองดึงจาก bmtaImageList
-                if (!bmtaImageUrl && typeof bmtaImageList !== 'undefined' && Array.isArray(bmtaImageList)) {
-                    const targetPattern = `สาย ${subRoute}`;
-                    const matchedFileName = bmtaImageList.find(file => String(file).includes(targetPattern));
-                    if (matchedFileName) {
-                        bmtaImageUrl = `https://www.bmta.co.th/images/car-routes/${encodeURIComponent(matchedFileName)}`;
-                    }
-                }
-        
-                // หากไม่มี URL รูปภาพ ให้ซ่อนกรอบไป
-                if (!bmtaImageUrl) return '';
-        
+            if (operatorType === 'bmta') {
+                const exactBmtaKey = `${mainRoute} (${subRoute})`;
+                
+                // ลำดับประเภทรถที่จะพยายามโหลด (ลำดับความสำคัญ)
+                const typesToTry = ['G', 'GN', 'N', 'O', 'B', 'GE', 'OE', 'BE', 'NE'];
+                
+                // สร้าง HTML ซ่อนสำหรับรูปภาพแต่ละประเภท ถ้าอันไหนโหลดได้สำเร็จ onerror จะไม่ทำงาน และซ่อนภาพที่ไม่สำเร็จทิ้ง
                 return `
                     <div class="stop-card" style="margin-top: 16px; padding: 16px;">
-                        ${logoHtml ? `
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                                <div style="width: 32px; height: 32px; flex-shrink: 0;">${logoHtml}</div>
-                                <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางค่าโดยสาร</span>
+                        <div id="bmta-header-${subRoute}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+                            <div id="bmta-logo-${subRoute}" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                ${typeof renderBusLogo === 'function' ? renderBusLogo('G') : ''}
                             </div>
-                        ` : ''}
+                            <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางเดินรถ</span>
+                        </div>
+        
+                        <!-- หมายเหตุกะสว่าง (จะแสดงเฉพาะตอนที่โหลดรูป GN สำเร็จ) -->
+                        <div id="bmta-night-note-${subRoute}" style="
+                            display: none;
+                            background-color: #fff3cd; 
+                            color: #856404; 
+                            padding: 8px 12px; 
+                            border-radius: 6px; 
+                            font-size: 14px; 
+                            font-weight: 500; 
+                            margin-bottom: 12px;
+                            border-left: 4px solid #ffebaa;
+                        ">
+                            * หมายเหตุ กะสว่าง 9.5 บาท ตลอดสาย
+                        </div>
+        
                         <div class="route-img-container" style="width: 100%; text-align: center;">
-                            <img src="${bmtaImageUrl}" 
-                                 crossorigin="anonymous" 
-                                 referrerpolicy="no-referrer"
-                                 style="width: 100%; height: auto; border-radius: 8px;" 
-                                 onerror="this.closest('.stop-card').style.display='none';">
+                            ${typesToTry.map((type, index) => `
+                                <img src="routes/bmta/${exactBmtaKey} ${type}.png" 
+                                     class="bmta-route-img-${subRoute}"
+                                     data-type="${type}"
+                                     style="width: 100%; height: auto; border-radius: 8px; display: none;" 
+                                     alt="ตารางเดินรถ ${busNo}"
+                                     onload="
+                                        this.style.display='block';
+                                        if('${type}' === 'GN') {
+                                            document.getElementById('bmta-night-note-${subRoute}').style.display='block';
+                                        }
+                                        if(typeof renderBusLogo === 'function') {
+                                            document.getElementById('bmta-logo-${subRoute}').innerHTML = renderBusLogo('${type}');
+                                        }
+                                     "
+                                     onerror="
+                                        this.remove();
+                                        const remaining = document.querySelectorAll('.bmta-route-img-${subRoute}');
+                                        if (remaining.length === 0) {
+                                            this.closest('.stop-card').style.display='none';
+                                        }
+                                     ">
+                            `).join('')}
                         </div>
                     </div>
                 `;
