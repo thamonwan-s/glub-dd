@@ -1014,66 +1014,48 @@
             // 🔴 2. กรณี ขสมก (BMTA) -> ตรวจสอบรูปใน bmta.js เพื่อดึงโลโก้ตามประเภทสีรถ
             if (operatorType === 'bmta') {
                 const exactBmtaKey = `${mainRoute} (${subRoute})`;
-                const safeSubRoute = subRoute.replace(/[^a-zA-Z0-9]/g, '-');
-                const containerId = `bmta-wrapper-${safeSubRoute}`;
+                const safeSubRoute = String(subRoute).replace(/[^a-zA-Z0-9]/g, '-');
                 const typesToTry = ['G', 'GN', 'N', 'O', 'B', 'GE', 'OE', 'BE', 'NE'];
         
-                // สคริปต์ตรวจสอบการมีอยู่ของไฟล์รูปภาพในโฟลเดอร์ routes/bmta/
-                setTimeout(() => {
-                    const wrapper = document.getElementById(containerId);
-                    if (!wrapper) return;
+                const cardsHtml = typesToTry.map(type => {
+                    const imgUrl = `routes/bmta/${exactBmtaKey} ${type}.png`;
+                    const cardId = `bmta-card-${safeSubRoute}-${type}`;
+                    const cardLogo = typeof renderBusLogo === 'function' ? renderBusLogo(type) : '';
         
-                    // วนลูปเช็กรูปภาพทุกหมวดพร้อมกัน
-                    typesToTry.forEach(type => {
-                        const imgUrl = `routes/bmta/${exactBmtaKey} ${type}.png`;
-                        const tempImg = new Image();
+                    return `
+                        <div id="${cardId}" class="stop-card" style="margin-top: 16px; padding: 16px; display: none;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+                                <div style="width: 32px; height: 32px; flex-shrink: 0;">${cardLogo}</div>
+                                <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางเดินรถ</span>
+                            </div>
         
-                        tempImg.onload = () => {
-                            // ดึงโลโก้ประจำสี/ประเภทรถ
-                            const cardLogo = typeof renderBusLogo === 'function' ? renderBusLogo(type) : '';
-                            
-                            // สร้างกรอบ Card ใหม่เฉพาะของหมวดนั้นๆ
-                            const cardHtml = `
-                                <div class="stop-card" style="margin-top: 16px; padding: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                                        <div style="width: 32px; height: 32px; flex-shrink: 0;">${cardLogo}</div>
-                                        <span style="font-size: 15px; font-weight: 600; opacity: 0.9;">ตารางเดินรถ (${type})</span>
-                                    </div>
-        
-                                    ${type === 'GN' ? `
-                                        <div style="
-                                            background-color: #fff3cd; 
-                                            color: #856404; 
-                                            padding: 8px 12px; 
-                                            border-radius: 6px; 
-                                            font-size: 14px; 
-                                            font-weight: 500; 
-                                            margin-bottom: 12px;
-                                            border-left: 4px solid #ffebaa;
-                                        ">
-                                            * หมายเหตุ กะสว่าง 9.5 บาท ตลอดสาย
-                                        </div>
-                                    ` : ''}
-        
-                                    <div class="route-img-container" style="width: 100%; text-align: center;">
-                                        <img src="${imgUrl}" style="width: 100%; height: auto; border-radius: 8px;" alt="ตารางเดินรถ ${busNo} (${type})">
-                                    </div>
+                            ${type === 'GN' ? `
+                                <div style="
+                                    background-color: #fff3cd; 
+                                    color: #856404; 
+                                    padding: 8px 12px; 
+                                    border-radius: 6px; 
+                                    font-size: 14px; 
+                                    font-weight: 500; 
+                                    margin-bottom: 12px;
+                                    border-left: 4px solid #ffebaa;
+                                ">
+                                    * หมายเหตุ กะสว่าง 9.5 บาท ตลอดสาย
                                 </div>
-                            `;
+                            ` : ''}
         
-                            // เพิ่มกรอบเข้าไปใน Container
-                            wrapper.insertAdjacentHTML('beforeend', cardHtml);
-                        };
+                            <div class="route-img-container" style="width: 100%; text-align: center;">
+                                <img src="${imgUrl}" 
+                                     style="width: 100%; height: auto; border-radius: 8px;" 
+                                     alt="ตารางเดินรถ ${busNo} (${type})"
+                                     onload="document.getElementById('${cardId}').style.display='block';"
+                                     onerror="document.getElementById('${cardId}').style.display='none';">
+                            </div>
+                        </div>
+                    `;
+                }).join('');
         
-                        // ถ้าไม่มีรูปในหมวดนั้น ให้ข้ามไป (ไม่ต้องทำอะไร)
-                        tempImg.onerror = () => {};
-        
-                        tempImg.src = imgUrl;
-                    });
-                }, 50);
-        
-                // คืนค่า DIV Container เปล่าเพื่อรอรับการ์ดรูปภาพที่โหลดสำเร็จ
-                return `<div id="${containerId}"></div>`;
+                return `<div>${cardsHtml}</div>`;
             }
         
             return '';
