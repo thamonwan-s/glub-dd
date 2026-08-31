@@ -63,6 +63,7 @@ document.head.appendChild(styleSheet);
 const busColorMap = {
     'G':  'var(--color-bus-red)',
     'GE': 'var(--color-bus-red)',
+    'GN': 'var(--color-bus-red)',
     'O':  'var(--color-bus-orange)',
     'OE': 'var(--color-bus-orange)',
     'B':  'var(--color-bus-blue)',
