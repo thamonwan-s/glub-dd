@@ -1018,7 +1018,7 @@
                 const typesToTry = ['G', 'GN', 'N', 'O', 'B', 'GE', 'OE', 'BE', 'NE'];
         
                 const cardsHtml = typesToTry.map(type => {
-                    const imgUrl = `routes/bmta/${exactBmtaKey} ${type}.png`;
+                    const imgUrl = `bmta/${exactBmtaKey} ${type}.png`;
                     const cardId = `bmta-card-${safeSubRoute}-${type}`;
                     const cardLogo = typeof renderBusLogo === 'function' ? renderBusLogo(type) : '';
         
