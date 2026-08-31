@@ -924,31 +924,6 @@
         // 1. ประกาศตัวแปร Global ไว้บนสุด
         let bmtaImageList = [];
     
-        // 2. ฟังก์ชันดึงรายชื่อรูปภาพจากหน้าเว็บ ขสมก.
-        async function loadBmtaImageList() {
-            try {
-                const targetUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://www.bmta.co.th/th/bus-lines')}`; 
-                const response = await fetch(targetUrl);
-                const data = await response.json();
-                const htmlText = data.contents;
-    
-                const regex = /images\/car-routes\/([^"'\s>]+\.(?:png|jpg|jpeg))/gi;
-                const matches = [];
-                let match;
-    
-                while ((match = regex.exec(htmlText)) !== null) {
-                    matches.push(decodeURIComponent(match[1]));
-                }
-    
-                bmtaImageList = [...new Set(matches)];
-                console.log("--> [BMTA] 🟢 โหลดรายการรูปสำเร็จ:", bmtaImageList.length, "รายการ");
-            } catch (error) {
-                console.error("--> [BMTA] ❌ ดึงรายการรูปไม่สำเร็จ:", error);
-            }
-        }
-    
-        // 🌟 3. สั่งให้ทำงานทันทีเมื่อเปิดหน้าเว็บ
-        loadBmtaImageList();
         
         function renderRouteImage(busNo, operatorType) {
             if (!busNo) return '';
